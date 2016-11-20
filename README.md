@@ -12,6 +12,8 @@ You can try it here:
 ## Features
 * 1
 * 2
+  * 1
+  * 2
 
 
 ## Dependencies
