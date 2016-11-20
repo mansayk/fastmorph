@@ -2,7 +2,20 @@
 Fast corpus search engine
 
 
+Library sources are available at https://github.com/mansayk/fastmorph
 
+
+You can try it here: 
+
+
+
+## Features
+* 1
+* 2
+
+
+## Dependencies
+link to jsmn https://github.com/zserge/jsmn
 
 
 
