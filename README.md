@@ -17,6 +17,36 @@ Source code is available at https://github.com/mansayk/fastmorph.
 - It receives search queries over UNIX Domain Socket file in JSON format.
 
 
+## Some speed tests
+Tests performed on machine with following characteristics:
+* AMD FX-4100 Quad-Core Processor
+* RAM 16Gb
+* OS: CentOS release 6.8 (Final)
+* fastmorph: compiled with 4 threads support
+
+###Test results:
+
+Query:
+   Word 1: китап
+Number of occurences: 32209
+Query processing time: 0,17 sec.
+
+Query:
+   Word 1 (case sensitive, distance to the next word up to 3 words): Китап
+   Word 2 (if in brackets - lemma): (бир)
+Number of occurences: 15
+Query processing time: 0,121 sec.
+
+Query:
+   Word 1 (case sensitive, distance to the next word is from 1 to 100): \*ы
+   Word 2 (case sensitive, distance to the next word is from 1 to 100): \*а
+   Word 3 (case sensitive, distance to the next word is from 1 to 100): \*м
+   Word 4 (case sensitive, distance to the next word is from 1 to 100): \*с
+   Word 5 (case sensitive): \*е
+Number of occurences: 276778
+Query processing time: 1,704 sec.
+
+
 ## System Requirements
 - OS: tested on different Linux distributions.
 - RAM: about 2 Gb for the 100 mln word corpus.
