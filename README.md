@@ -71,28 +71,6 @@ Also we ask you to let us know where this search engine is used and, if you don'
 ## License
 This software is distributed under GNU General Public License v3.0.
 
-
-## ChangeLog:
-18.11.2016 - The 4th version of fastmorph corpus search engine is released. List of changes:
-   - case sensitive search option was added;
-   - the memory (RAM) usage by the search system is reduced twice;
-   - because of essential changes in the application architecture, search query performs now 3 - 5 times faster.
-Technical info: version 4 consumes about 2 Gb RAM for the same corpus.
-
-19.07.2016 - Some improvements in the Complex morphological search engine "fastmorph":
-   - in addition to the existing mask "\*", that matches any number of any symbols, the mask "?", that represents any single character, were added. More information about it you can find in the updated Guides;
-   - in the technical plan memory usage by the search system is reduced up to 25%.
-Technical info: version 3 consumes about 4 Gb RAM for the same corpus.
-
-13.06.2016 - Search by the middle part of a word functionality was added in the fastmorph module. For example, if you type \*әме\*, words like ярдәмендә, бәйрәмен, үткәрәмен, өйдәме will be found...
-
-21.04.2016 - Because of implementation in "fastmorph" module some processor optimizations and multithreading support we achieved that complex morphological search now performs up to five times faster.
-
-03.04.2016 - Complex morphological search system's features were significantly extended. You can get more info about them in [The Guides] (http://corpus.tatar/manual_en.htm) updated up to 3.0 and higher version.
-
-22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
-Technical info: version 1 consumes about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
-
 ## MySQL database format
 
 You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
@@ -197,5 +175,26 @@ This script also needs "inv_so" text file in the following format:
 |    8 |    1 |  
 |    9 |    1 |  
 |   10 |    1 |  
-  
+
+
+## ChangeLog:
+18.11.2016 - The 4th version of fastmorph corpus search engine is released. List of changes:
+   - case sensitive search option was added;
+   - the memory (RAM) usage by the search system is reduced twice;
+   - because of essential changes in the application architecture, search query performs now 3 - 5 times faster.
+Technical info: version 4 consumes about 2 Gb RAM for the same corpus.
+
+19.07.2016 - Some improvements in the Complex morphological search engine "fastmorph":
+   - in addition to the existing mask "\*", that matches any number of any symbols, the mask "?", that represents any single character, were added. More information about it you can find in the updated Guides;
+   - in the technical plan memory usage by the search system is reduced up to 25%.
+Technical info: version 3 consumes about 4 Gb RAM for the same corpus.
+
+13.06.2016 - Search by the middle part of a word functionality was added in the fastmorph module. For example, if you type \*әме\*, words like ярдәмендә, бәйрәмен, үткәрәмен, өйдәме will be found...
+
+21.04.2016 - Because of implementation in "fastmorph" module some processor optimizations and multithreading support we achieved that complex morphological search now performs up to five times faster.
+
+03.04.2016 - Complex morphological search system's features were significantly extended. You can get more info about them in [The Guides] (http://corpus.tatar/manual_en.htm) updated up to 3.0 and higher version.
+
+22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
+Technical info: version 1 consumes about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
 
