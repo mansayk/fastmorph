@@ -1,21 +1,22 @@
 # fastmorph
-Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en) language
-
-
-Source code is available at https://github.com/mansayk/fastmorph
+Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en) language.
 
 You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html?stype=6&lang=en#top). 
+
+Source code is available at https://github.com/mansayk/fastmorph.
+
+
 
 
 
 ## Features
 - Advanced search options based on any combination of different search parameters:
-   * word form,
-   * lemma,
-   * set of morphological tags,
-   * pattern matching (currently "*" and "?" masks are supported),
-   * case matching,
-   * distance to the next word.
+   * word form
+   * lemma
+   * set of morphological tags
+   * pattern matching (currently "*" and "?" masks are supported)
+   * case matching
+   * distance to the next word
 - It receives search queries over UNIX Domain Socket file in JSON format.
 
 ## System Requirements
@@ -29,7 +30,8 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 
 
 ## Dependencies
-link to jsmn https://github.com/zserge/jsmn
+* [jsmn] (https://github.com/zserge/jsmn) is a minimalistic JSON parser in C.
+* MySQL C API is a C-based API that client applications written in C can use to communicate with MySQL Server.
 
 
 
