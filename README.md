@@ -25,11 +25,12 @@ Source code is available at https://github.com/mansayk/fastmorph.
 * fastmorph: compiled with 4 threads support, x64
 
 ### Test results:
-
+```
 Query:
-   Word 1: китап
+Word 1: китап
 Number of occurences: 32209
 Query processing time: 0,17 sec. 
+```
 
 Query:
    Word 1 (case sensitive, distance to the next word up to 3 words): Китап
