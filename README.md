@@ -1,5 +1,5 @@
 # fastmorph
-Fast corpus search engine
+Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en)
 
 
 Library sources are available at https://github.com/mansayk/fastmorph
