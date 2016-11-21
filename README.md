@@ -40,17 +40,17 @@ This software is distributed under GNU General Public License v3.0.
 
 ## ChangeLog:
 18.11.2016 - The 4th version of fastmorph corpus search engine is released. List of changes:
-    - case sensitive search option was added;
-    - the memory (RAM) usage by the search system is reduced twice;
-    - because of essential changes in the application architecture, search query performs now 3 - 5 times faster.
+   - case sensitive search option was added;
+   - the memory (RAM) usage by the search system is reduced twice;
+   - because of essential changes in the application architecture, search query performs now 3 - 5 times faster.
 Technical info: version 4 uses about 2 Gb RAM for the same corpus.
 
 19.07.2016 - Some improvements in the Complex morphological search engine "fastmorph":
-    - in addition to the existing mask "*", that matches any number of any symbols, the mask "?", that represents any single character, were added. More information about it you can find in the updated Guides;
-    - in the technical plan memory usage by the search system is reduced up to 25%.
+   - in addition to the existing mask "\*", that matches any number of any symbols, the mask "?", that represents any single character, were added. More information about it you can find in the updated Guides;
+   - in the technical plan memory usage by the search system is reduced up to 25%.
 Technical info: version 3 uses about 4 Gb RAM for the same corpus.
 
-13.06.2016 - Search by the middle part of a word functionality was added in the fastmorph module. For example, if you type *әме*, words like ярдәмендә, бәйрәмен, үткәрәмен, өйдәме will be found...
+13.06.2016 - Search by the middle part of a word functionality was added in the fastmorph module. For example, if you type \*әме\*, words like ярдәмендә, бәйрәмен, үткәрәмен, өйдәме will be found...
 
 21.04.2016 - Because of implementation in "fastmorph" module some processor optimizations and multithreading support we achieved that complex morphological search now performs up to five times faster.
 
