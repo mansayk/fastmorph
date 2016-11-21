@@ -1,0 +1,84 @@
+######################  MORPH 6  ###########################################################################################
+
+
+CREATE TABLE
+    `morph6_main_apertium` (
+        `id` INT(9) NOT NULL,
+        `word_case` INT(7) NOT NULL,
+        `word` INT(7) NOT NULL,
+        `lemma` INT(7) NOT NULL,
+        `tags` INT(5) NOT NULL,
+        `sentence` INT(8) NOT NULL,
+        `source` INT(4) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.main.output.txt' INTO TABLE morph6_main_apertium CHARACTER SET UTF8 (id,word_case,word,lemma,tags,sentence,source);
+
+
+CREATE TABLE
+    `morph6_words_case_apertium` (
+        `id` INT(7) NOT NULL,
+        `freq` INT(7) NOT NULL,
+        `word_case` VARCHAR(255) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.words_case.output.txt' INTO TABLE morph6_words_case_apertium CHARACTER SET UTF8 (id,freq,word_case);
+
+
+CREATE TABLE
+    `morph6_words_apertium` (
+        `id` INT(7) NOT NULL,
+        `freq` INT(7) NOT NULL,
+        `word` VARCHAR(255) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.words.output.txt' INTO TABLE morph6_words_apertium CHARACTER SET UTF8 (id,freq,word);
+
+
+CREATE TABLE
+    `morph6_lemmas_apertium` (
+        `id` INT(7) NOT NULL,
+        `freq` INT(7) NOT NULL,
+        `lemma` VARCHAR(255) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.lemmas.output.txt' INTO TABLE morph6_lemmas_apertium CHARACTER SET UTF8 (id,freq,lemma);
+
+
+CREATE TABLE
+    `morph6_tags_apertium` (
+        `id` INT(5) NOT NULL,
+        `freq` INT(8) NOT NULL,
+        `combinations` VARCHAR(100) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.tags.output.txt' INTO TABLE morph6_tags_apertium CHARACTER SET UTF8 (id,freq,combinations);
+
+
+CREATE TABLE
+    `morph6_tags_uniq_apertium` (
+        `id` INT(3) NOT NULL,
+        `freq` INT(8) NOT NULL,
+        `tag` VARCHAR(50) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.tags-uniq.output.txt.sorted.txt' INTO TABLE morph6_tags_uniq_apertium CHARACTER SET UTF8 (id,freq,tag);
+
+
+############################################################################################################################
+
+
+CREATE TABLE 
+    `sources` (
+	`col1` int(11) DEFAULT NULL,
+	`col2` text,
+	`col3` text,
+	PRIMARY KEY `index` (`col1`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
