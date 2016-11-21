@@ -95,6 +95,8 @@ Technical info: version 1 consumes about 6 Gb RAM for the corpus, consisting of 
 
 ## MySQL database format
 
+You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
+
 mysql> select * from morph6_main_apertium limit 10;  
   
 | id | word_case | word   | lemma  | tags  | sentence | source |  
