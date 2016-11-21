@@ -54,7 +54,7 @@ Technical info: version 3 uses about 4 Gb RAM for the same corpus.
 
 21.04.2016 - Because of implementation in "fastmorph" module some processor optimizations and multithreading support we achieved that complex morphological search now performs up to five times faster.
 
-03.04.2016 - Complex morphological search system's features were significantly extended. You can get more info about them in [The Guides] (http://corpus.tatar/en) updated up to 3.0 and higher version.
+03.04.2016 - Complex morphological search system's features were significantly extended. You can get more info about them in [The Guides] (http://corpus.tatar/manual_en.htm) updated up to 3.0 and higher version.
 
 22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
 Technical info: version 1 uses about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
