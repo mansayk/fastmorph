@@ -181,7 +181,7 @@ mysql> select * from sources where col1 > 300 limit 3;
 
 ## Apertium
 If you use Apertium's tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output. (Script will be available soon.)  
-This scrip also needs "inv_so" text file with content "sentence_id source_id", for example:
+This scrip also needs "inv_so" text file in the following format:
   
 | sentence id | source id |  
 | ------: | ------: |  
