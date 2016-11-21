@@ -97,7 +97,7 @@ Technical info: version 1 uses about 6 Gb RAM for the corpus, consisting of 116 
 
 mysql> select * from morph6_main_apertium limit 10;  
 | id | word_case | word   | lemma  | tags  | sentence | source |  
-|----|-----------|--------|--------|-------|----------|--------|  
+| --- | -------- | ------ | ------ | ----- | -------- | ------ |  
 |  0 |     89304 | 137624 | 103580 | 11189 |        1 |      1 |  
 |  1 |    197781 | 390168 | 291788 |  6598 |        1 |      1 |  
 |  2 |        21 |     21 |     15 | 14861 |        1 |      1 |  
