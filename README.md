@@ -19,10 +19,10 @@ Source code is available at https://github.com/mansayk/fastmorph.
 
 ## Some speed tests
 ### Tests performed on machine with following characteristics:
-* AMD FX-4100 Quad-Core Processor
-* RAM 16Gb
+* CPU: AMD FX-4100 Quad-Core Processor
+* RAM: 16Gb
 * OS: CentOS release 6.8 (Final)
-* fastmorph: compiled with 4 threads support
+* fastmorph: compiled with 4 threads support, x64
 
 ### Test results:
 
