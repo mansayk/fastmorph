@@ -92,3 +92,23 @@ Technical info: version 3 uses about 4 Gb RAM for the same corpus.
 
 22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
 Technical info: version 1 uses about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
+
+## MySQL database format
+
+mysql> select * from morph6_main_apertium limit 10;
++----+-----------+--------+--------+-------+----------+--------+
+| id | word_case | word   | lemma  | tags  | sentence | source |
++----+-----------+--------+--------+-------+----------+--------+
+|  0 |     89304 | 137624 | 103580 | 11189 |        1 |      1 |
+|  1 |    197781 | 390168 | 291788 |  6598 |        1 |      1 |
+|  2 |        21 |     21 |     15 | 14861 |        1 |      1 |
+|  3 |     82146 | 166720 | 121016 | 11029 |        1 |      1 |
+|  4 |    134768 | 245422 | 177813 |  1870 |        1 |      1 |
+|  5 |        19 |     19 |     13 | 11354 |        1 |      1 |
+|  6 |    405188 | 852194 | 632380 |  2160 |        1 |      1 |
+|  7 |    405343 | 857977 | 637594 | 14724 |        1 |      1 |
+|  8 |        19 |     19 |     13 | 11354 |        1 |      1 |
+|  9 |    451227 | 978676 | 717918 | 14608 |        1 |      1 |
++----+-----------+--------+--------+-------+----------+--------+
+
+
