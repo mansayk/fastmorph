@@ -169,11 +169,12 @@ mysql> select * from morph6_tags_apertium where id > 11100 limit 10;
 | 11108 |    40 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<px1pl\>       |  
 | 11109 |   101 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<px1sg\>       |  
 | 11110 |    41 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<px2sg\>       |  
-
-
-
- 
- 
- 
- 
+  
+mysql> select * from sources where col1 > 300 limit 3;  
+  
+| col1 |col2 | col3 |
+| ---: | --- | ---- |
+|  301 | "miras.belem.ru" (web-сайт)                                                                   | miras.belem.ru |
+|  302 | Абдулла Алиш. Куршеләр                                                                        | book           |
+|  303 | Дәүләт хакимияте һәм җирле үзидарә органнарының бердәм "Рәсми Татарстан" порталы (web-сайт)   | tatarstan.ru   |
 
