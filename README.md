@@ -63,6 +63,11 @@ Query processing time: 1,704 sec.
 * MySQL C API is a C-based API that client applications written in C can use to communicate with MySQL Server.
 
 
+## Using
+If you are have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us via [tatcorpus@gmail.com] (tatcorpus@gmail.com). 
+Also we ask you to let us know where this search engine is used and if you don't mind we will publish links to those projects here.
+
+
 ## License
 This software is distributed under GNU General Public License v3.0.
 
