@@ -159,16 +159,16 @@ mysql> select * from morph6_tags_apertium where id > 11100 limit 10;
   
 | id    | freq  | combinations                       |  
 | ----: | ----: | ---------------------------------- |  
-| 11101 |     4 | <ant>,<dat>,<f>,<frm>,<np>,<px2sg> |  
-| 11102 | 17141 | <ant>,<dat>,<f>,<np>               |  
-| 11103 |   387 | <ant>,<dat>,<f>,<np>,<pl>          |  
-| 11104 |     1 | <ant>,<dat>,<f>,<np>,<pl>,<px1pl>  |  
-| 11105 |     1 | <ant>,<dat>,<f>,<np>,<pl>,<px1sg>  |  
-| 11106 |    12 | <ant>,<dat>,<f>,<np>,<pl>,<px3sp>  |  
-| 11107 |     1 | <ant>,<dat>,<f>,<np>,<pl>,<px>     |  
-| 11108 |    40 | <ant>,<dat>,<f>,<np>,<px1pl>       |  
-| 11109 |   101 | <ant>,<dat>,<f>,<np>,<px1sg>       |  
-| 11110 |    41 | <ant>,<dat>,<f>,<np>,<px2sg>       |  
+| 11101 |     4 | \<ant\>,\<dat\>,\<f\>,\<frm\>,\<np\>,\<px2sg\> |  
+| 11102 | 17141 | \<ant\>,\<dat\>,\<f\>,\<np\>               |  
+| 11103 |   387 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<pl\>          |  
+| 11104 |     1 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<pl\>,\<px1pl\>  |  
+| 11105 |     1 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<pl\>,\<px1sg\>  |  
+| 11106 |    12 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<pl\>,\<px3sp\>  |  
+| 11107 |     1 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<pl\>,\<px\>     |  
+| 11108 |    40 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<px1pl\>       |  
+| 11109 |   101 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<px1sg\>       |  
+| 11110 |    41 | \<ant\>,\<dat\>,\<f\>,\<np\>,\<px2sg\>       |  
 
 
 
