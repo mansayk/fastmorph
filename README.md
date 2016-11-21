@@ -6,9 +6,6 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 Source code is available at https://github.com/mansayk/fastmorph.
 
 
-
-
-
 ## Features
 - Advanced search options based on any combination of different search parameters:
    * word form
@@ -19,14 +16,13 @@ Source code is available at https://github.com/mansayk/fastmorph.
    * distance to the next word
 - It receives search queries over UNIX Domain Socket file in JSON format.
 
+
 ## System Requirements
 - OS: tested on different Linux distributions.
 - RAM: about 2 Gb for the 100 mln word corpus.
 - CPU: multicore processors are recommended because of multithreading support.
 - MySQL: program loads all data from MySQL database.
-
-
-
+- UNIX Domain Socket support by OS.
 
 
 ## Dependencies
@@ -34,9 +30,9 @@ Source code is available at https://github.com/mansayk/fastmorph.
 * MySQL C API is a C-based API that client applications written in C can use to communicate with MySQL Server.
 
 
-
 ## License
 This software is distributed under GNU General Public License v3.0.
+
 
 ## ChangeLog:
 18.11.2016 - The 4th version of fastmorph corpus search engine is released. List of changes:
