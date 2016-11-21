@@ -111,6 +111,7 @@ mysql> select * from morph6_main_apertium limit 10;
 |  9 |    451227 | 978676 | 717918 | 14608 |        1 |      1 |  
   
 mysql> select * from morph6_words_case_apertium where id > 200000 limit 10;  
+  
 | id     | freq | word_case                |  
 | -----: | ---: | ------------------------ |  
 | 200001 |    4 | Идарәсендәге             |  
