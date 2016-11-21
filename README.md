@@ -178,3 +178,7 @@ mysql> select * from sources where col1 > 300 limit 3;
 |  302 | Абдулла Алиш. Куршеләр                                                                        | book           |
 |  303 | Дәүләт хакимияте һәм җирле үзидарә органнарының бердәм "Рәсми Татарстан" порталы (web-сайт)   | tatarstan.ru   |
 
+
+## Apertium
+If you use Apertium's tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output. (Script will be available soon.)
+
