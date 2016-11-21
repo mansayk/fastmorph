@@ -126,6 +126,7 @@ mysql> select * from morph6_words_case_apertium where id > 200000 limit 10;
 | 200010 |    1 | Идарәханә                |  
   
 mysql> select * from morph6_words_apertium where id > 100000 limit 10;  
+  
 | id     | freq | word                                    |  
 | -----: | ---: | --------------------------------------- |  
 | 100001 |  975 | артистларны                             |  
@@ -140,6 +141,7 @@ mysql> select * from morph6_words_apertium where id > 100000 limit 10;
 | 100010 |    3 | артистларның гына                       |  
   
 mysql> select * from morph6_lemmas_apertium where id > 300000 limit 10;  
+  
 | id     | freq | lemma                      |  
 | -----: | ---: | -------------------------- |  
 | 300001 |    1 | иярүчелек                  |  
@@ -154,6 +156,7 @@ mysql> select * from morph6_lemmas_apertium where id > 300000 limit 10;
 | 300010 |   12 | иярүчеләрне                |  
   
 mysql> select * from morph6_tags_apertium where id > 11100 limit 10;  
+  
 | id    | freq  | combinations                       |  
 | ----: | ----: | ---------------------------------- |  
 | 11101 |     4 | <ant>,<dat>,<f>,<frm>,<np>,<px2sg> |  
