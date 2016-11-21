@@ -18,13 +18,13 @@ Source code is available at https://github.com/mansayk/fastmorph.
 
 
 ## Some speed tests
-Tests performed on machine with following characteristics:
+### Tests performed on machine with following characteristics:
 * AMD FX-4100 Quad-Core Processor
 * RAM 16Gb
 * OS: CentOS release 6.8 (Final)
 * fastmorph: compiled with 4 threads support
 
-###Test results:
+### Test results:
 
 Query:
    Word 1: китап
