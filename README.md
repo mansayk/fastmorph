@@ -110,4 +110,7 @@ mysql> select * from morph6_main_apertium limit 10;
 |  9 |    451227 | 978676 | 717918 | 14608 |        1 |      1 |  
 
  
-
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
