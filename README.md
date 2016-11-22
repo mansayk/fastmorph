@@ -74,9 +74,11 @@ This software is distributed under GNU General Public License v3.0.
 
 ## JSON
 ### Input format
+...
 
 
 ### Output format
+...
 
 
 ## MySQL database format
