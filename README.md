@@ -71,6 +71,14 @@ Also we ask you to let us know where this search engine is used and, if you don'
 ## License
 This software is distributed under GNU General Public License v3.0.
 
+
+## JSON
+### Input format
+
+
+### Output format
+
+
 ## MySQL database format
 
 You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
