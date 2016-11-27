@@ -88,7 +88,7 @@ int cl, rc;
 char *socket_path = UNIX_DOMAIN_SOCKET;
 
 // Query processing time
-struct timeval tv1,tv2,dtv;
+struct timeval tv1, tv2; // different counters
 struct timezone tz;
 
 // Semaphore
@@ -170,20 +170,21 @@ unsigned int params;							/*   Number of tokens (1-5) to search: TODO: DELETE  
 /*
  * Get start time
  */
-void time_start()
+void time_start(struct timeval *tv)
 { 
-	gettimeofday(&tv1, &tz); 
+	gettimeofday(tv, &tz); 
 }
 
 
 /*
  * Get finish time and calculate the difference
  */
-long time_stop()
+long time_stop(struct timeval *tv_begin)
 { 
-	gettimeofday(&tv2, &tz);
-	dtv.tv_sec = tv2.tv_sec - tv1.tv_sec;
-	dtv.tv_usec = tv2.tv_usec - tv1.tv_usec;
+	struct timeval tv, dtv;
+	gettimeofday(&tv, &tz);
+	dtv.tv_sec = tv.tv_sec - tv_begin->tv_sec;
+	dtv.tv_usec = tv.tv_usec - tv_begin->tv_usec;
 	if(dtv.tv_usec < 0) { 
 		dtv.tv_sec--; 
 		dtv.tv_usec += 1000000; 
@@ -1415,7 +1416,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 		}
 		while((rc = read(cl, bufin, sizeof(bufin))) > 0) {
 			// Initial search time value
-			time_start();
+			time_start(&tv1);
 
 			printf("\n-----------------------------------------------------------------");
 			printf("\nRead %u bytes: %.*s\n", rc, rc, bufin);
@@ -1469,6 +1470,9 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 				}
 			}
 
+
+
+			time_start(&tv2);
 			// Creating threads for the big cycle
 			printf("\n\nCreating threads...");
 			for(t = 0; t < SEARCH_THREADS; t++){
@@ -1492,7 +1496,11 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 				printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
 			}
 			printf("\n  Threads finished!");
+			printf("\nThreads func_run_cycle time: %ld milliseconds.\n", time_stop(&tv2));
 			
+
+
+
 			// Summ amount of found occurences from all threads
 			size_array_found_sents_all_summ = 0;
 			for(int w = 0; w < SEARCH_THREADS; w++) { // t ?
@@ -1530,7 +1538,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 				}
 			}
 
-			printf("\nQuery processing time: %ld milliseconds.\n", time_stop());
+			printf("\nQuery processing time: %ld milliseconds.\n", time_stop(&tv1));
 		}
 		if(rc == -1) {
 			perror("Read error");
