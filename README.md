@@ -40,11 +40,11 @@ Query processing time: 0,121 sec.
 ```
 ```
 Query:
-   Word 1 (case sensitive, distance range to the next word is from 1 to 100): \*ы
-   Word 2 (case sensitive, distance range to the next word is from 1 to 100): \*а
-   Word 3 (case sensitive, distance range to the next word is from 1 to 100): \*м
-   Word 4 (case sensitive, distance range to the next word is from 1 to 100): \*с
-   Word 5 (case sensitive): \*е
+   Word 1 (case sensitive, distance range to the next word is from 1 to 100): *ы
+   Word 2 (case sensitive, distance range to the next word is from 1 to 100): *а
+   Word 3 (case sensitive, distance range to the next word is from 1 to 100): *м
+   Word 4 (case sensitive, distance range to the next word is from 1 to 100): *с
+   Word 5 (case sensitive): *е
 Number of occurences: 276778
 Query processing time: 1,704 sec.
 ```
@@ -131,7 +131,7 @@ Detailed:
   "last_pos": "0"  
 }  
 ```
-**"types"** is used as a set of bits according to these rules:  
+**"types"** is used as a set of bits according to these constants:  
 ```
 #define WORD_CASE			0				/*   id of words (case sensitive)						*/
 #define WORD				1				/*   id of words								*/
