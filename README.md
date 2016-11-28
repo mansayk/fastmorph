@@ -131,7 +131,7 @@ Detailed:
   "last_pos": "0"  
 }  
 ```
-**"types"** is used as set of bits according to these rules:  
+**"types"** is used as a set of bits according to these rules:  
 ```
 #define WORD_CASE			0				/*   id of words (case sensitive)						*/
 #define WORD				1				/*   id of words								*/
@@ -141,7 +141,7 @@ Detailed:
 #define WILD				5				/*   id of wild									*/
 #define SEARCH_TYPES_OFFSET		10				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49 bits; 50-63 are free	*/
 ```
-**"params"** is just an amount of words to search (1-5). This parameter will be removed in the next release.  
+**"params"** is just an amount of words to search (1-5). This parameter will probably be removed in the next release.  
 
 
 ### Output format
