@@ -5,7 +5,6 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
-.
 
 ## Features
 - Advanced search options based on any combination of different search parameters:
@@ -132,6 +131,20 @@ Detailed:
   "last_pos": "0"  
 }  
 ```
+**"types"** is used as set of bits according to these rules:  
+```
+#define WORD_CASE		0				/*   id of words (case sensitive)						*/  
+#define WORD				1				/*   id of words						            		*/  
+#define LEMMA				2				/*   id of lemmas							            	*/  
+#define TAGS				3				/*   id of tags								            	*/  
+#define WILD_CASE		4				/*   id of wild (case sensitive)						*/  
+#define WILD				5				/*   id of wild									            */  
+#define SEARCH_TYPES_OFFSET		10				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49 bits; 50-63 are free	*/  
+```
+**"types"** probably will be removed in the next release.  
+
+**"params"** is just an amount of words to search (1-5). This parameter will be removed in the next release.  
+
 
 ### Output format
 ```
