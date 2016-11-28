@@ -139,11 +139,8 @@ Detailed:
 #define TAGS				3				/*   id of tags									*/
 #define WILD_CASE			4				/*   id of wild (case sensitive)						*/
 #define WILD				5				/*   id of wild									*/
-//#define CASE_SENSITIVE		9				/*   id of case	sensitive							*/
 #define SEARCH_TYPES_OFFSET		10				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49 bits; 50-63 are free	*/
 ```
-**"types"** probably will be removed in the next release.  
-
 **"params"** is just an amount of words to search (1-5). This parameter will be removed in the next release.  
 
 
