@@ -74,70 +74,72 @@ This software is distributed under GNU General Public License v3.0.
 
 ## JSON
 ### Input format
-{
-  "word": [
-    "",
-    "",
-    "",
-    "",
-    ""
-  ],
-  "lemma": [
-    "",
-    "",
-    "кил",
-    "",
-    ""
-  ],
-  "tags": [
-    "\<adj\>",
-    "\<n\>",
-    "",
-    "",
-    ""
-  ],
-  "wildmatch": [
-    "",
-    "ке\*",
-    "",
-    "",
-    ""
-  ],
-  "dist_from": [
-    1,
-    1,
-    1,
-    1
-  ],
-  "dist_to": [
-    5,
-    1,
-    1,
-    1
-  ],
-  "types": 4218888,
-  "params": 3,
-  "last_pos": "0"
-}
-
+```
+{  
+  "word": [  
+    "",  
+    "",  
+    "",  
+    "",  
+    ""  
+  ],  
+  "lemma": [  
+    "",  
+    "",  
+    "кил",  
+    "",  
+    ""  
+  ],  
+  "tags": [  
+    "\<adj\>",  
+    "\<n\>",  
+    "",  
+    "",  
+    ""  
+  ],  
+  "wildmatch": [  
+    "",  
+    "ке\*",  
+    "",  
+    "",  
+    ""  
+  ],  
+  "dist_from": [  
+    1,  
+    1,  
+    1,  
+    1  
+  ],  
+  "dist_to": [  
+    5,  
+    1,  
+    1,  
+    1  
+  ],  
+  "types": 4218888,  
+  "params": 3,  
+  "last_pos": "0"  
+}  
+```
 
 ### Output format
-{
-  "example": [
-    {
-      "id": 15853,
-      "source": "\"2013 Универсиадасы блогы\" (web-сайт)",
-      "source_type": "kazan2013.ru",
-      "sentence": "Универсиада кебек зур проектның бер өлеше булу өчен, Казанга Россиянең төрле төбәкләреннән һәм Дөньяның \<span id='found_word_0' class='found_word' title='(төрле) \<adj\>'\>төрле\</span\> илләреннән бик күп \<span id='found_word_1' class='found_word' title='(кеше) \<n\>,\<nom\>,\<sg\>'>кеше\</span\> \<span id='found_word_2' class='found_word' title='(кил) \<ifi\>,\<iv\>,\<p3\>,\<sg\>,\<v\>'>килде\</span\>."
-    },
-    {
-      "id": -1
-    }
-  ],
-  "last_pos": "892447x39311905x75980782x114356633",
-  "found_all": 1359
-}
-
+```
+{  
+  "example": [  
+    {  
+      "id": 15853,  
+      "source": "\"2013 Универсиадасы блогы\" (web-сайт)",  
+      "source_type": "kazan2013.ru",  
+      "sentence": "Универсиада кебек зур проектның бер өлеше булу өчен, Казанга Россиянең төрле төбәкләреннән һәм Дөньяның \<span id='found_word_0' class='found_word' title='(төрле) \<adj\>'\>төрле\</span\> илләреннән бик күп \<span id='found_word_1' class='found_word' title='(кеше) \<n\>,\<nom\>,\<sg\>'>кеше\</span\> \<span id='found_word_2' class='found_word' title='(кил) \<ifi\>,\<iv\>,\<p3\>,\<sg\>,\<v\>'>килде\</span\>."  
+    },  
+    {  
+      "id": -1  
+    }  
+  ],  
+  "last_pos": "892447x39311905x75980782x114356633",  
+  "found_all": 1359  
+}  
+```
 
 ## MySQL database format
 
