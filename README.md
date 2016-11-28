@@ -140,11 +140,11 @@ Detailed:
       "id": 15853,  
       "source": "\"2013 Универсиадасы блогы\" (web-сайт)",  
       "source_type": "kazan2013.ru",  
-      "sentence": "Универсиада кебек зур проектның бер өлеше булу өчен, Казанга Россиянең төрле 
-        төбәкләреннән һәм Дөньяның 
-        <span id='found_word_0' class='found_word' title='(төрле) <adj>'>төрле</span> 
-        илләреннән бик күп 
-        <span id='found_word_1' class='found_word' title='(кеше) <n>,<nom>,<sg>'>кеше</span> 
+      "sentence": "Универсиада кебек зур проектның бер өлеше булу өчен, Казанга Россиянең төрле  
+        төбәкләреннән һәм Дөньяның  
+        <span id='found_word_0' class='found_word' title='(төрле) <adj>'>төрле</span>  
+        илләреннән бик күп  
+        <span id='found_word_1' class='found_word' title='(кеше) <n>,<nom>,<sg>'>кеше</span>  
         <span id='found_word_2' class='found_word' title='(кил) <ifi>,<iv>,<p3>,<sg>,<v>'>килде</span>."  
     },  
     {  
