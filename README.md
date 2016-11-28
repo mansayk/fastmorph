@@ -76,7 +76,7 @@ This software is distributed under GNU General Public License v3.0.
 Search query: 
 ```
 Schematical view: {<adj>}(0) 1-5 {ке*<n>}(1) 1-1 {(кил)}(0) 1-1 {}(0) 1-1 {}(0)  
-Explained:  
+Detailed:  
    Word 1 (distance range to the next word is from 1 to 5): <adj>  
    Word 2 (case sensitive): ке*<n>  
    Word 3: (кил)  
