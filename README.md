@@ -143,6 +143,9 @@ Detailed:
 ```
 **"params"** is just an amount of words to search (1-5).  
 
+**Warning!** You should normalize and verify input data before passing it to fastmorph:  
+- remove all not allowed symbols;
+- check string legths and so on.
 
 ### Output format
 ```
@@ -167,10 +170,11 @@ Detailed:
   "found_all": 1359  
 }  
 ```
-Each word matching the search query is returned in the following HTML tags:  
+As you see, each word matching the search query is returned in the following HTML tags:  
 ```
 <span id='found_word_0' class='found_word' title='(LEMMA) <TAG1><TAG2>'>FOUND_WORD</span>
 ```
+so, for example, you can use CSS for highlighting them...
 
 
 ## MySQL database format
