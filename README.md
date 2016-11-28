@@ -5,6 +5,7 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
+.
 
 ## Features
 - Advanced search options based on any combination of different search parameters:
