@@ -167,6 +167,11 @@ Detailed:
   "found_all": 1359  
 }  
 ```
+Each word matching the search query is returned in the following HTML tags:  
+```
+<span id='found_word_0' class='found_word' title='(LEMMA) <TAG1><TAG2>'>FOUND_WORD</span>
+```
+
 
 ## MySQL database format
 
