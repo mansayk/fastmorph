@@ -279,6 +279,7 @@ In result you should get file, containing annotated sentences:
 ^Мин/Мин<prn><pers><p1><sg><nom>$ ^үземне/үз<prn><ref><px1sg><acc>$ ^белә/бел<v><tv><prc_impf>$ ^башлаганнан/башла<vaux><ger_past><abl>$ ^бирле/бирле<post>$ ^түбән/түбән<adj>$ ^очка/оч<n><sg><dat>$ – ^ерак/ерак<adj>$ ^бабакайларга/бабакай<n><pl><dat>$ ^төшәргә/төш<v><iv><inf>$ ^ярата/ярат<v><tv><pres><p3><sg>$ ^идем/и<cop><ifi><p1><sg>$^./.<sent>$
 ```
 2) Generate "inv_so" text file in the following format:  
+  
 | sentence id | source id |  
 | ------: | ------: |  
 |    1 |    1 |  
@@ -291,6 +292,7 @@ In result you should get file, containing annotated sentences:
 |    8 |    1 |  
 |    9 |    1 |  
 |   10 |    1 |  
+  
 And place it in the same directory with script.  
 3) Run "" python script this way:  
 ```
