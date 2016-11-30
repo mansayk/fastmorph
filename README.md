@@ -294,14 +294,19 @@ In result you should get file, containing annotated sentences:
 |   10 |    1 |  
   
 And place it in the same directory with script.  
-3) Run "" python script this way:  
+3) Run the python script this way:  
 ```
-...
+./tat-tagger_to_ntables_v6.23.py tatcorpus2.sentences.apertium.tagged.txt
 ```  
 It will take quite much time according to the size of your corpus.  
-4) If everything went well, you should get list of files that you need to import to MySQL database:  
+4) If everything went well, you should get list of new files that you need to import to MySQL database:  
 ```
-...
+tatcorpus2.sentences.apertium.tagged.txt.lemmas.output.txt
+tatcorpus2.sentences.apertium.tagged.txt.main.output.txt
+tatcorpus2.sentences.apertium.tagged.txt.tags-uniq.output.txt.sorted.txt
+tatcorpus2.sentences.apertium.tagged.txt.tags.output.txt
+tatcorpus2.sentences.apertium.tagged.txt.words.output.txt
+tatcorpus2.sentences.apertium.tagged.txt.words_case.output.txt        
 ```  
 
 
