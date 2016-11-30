@@ -267,7 +267,21 @@ mysql> select * from sources where col1 > 300 limit 3;
 
 ## Apertium
 If you use [Apertium's] (http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output. (Script will be available soon.)  
-This script also needs "inv_so" text file in the following format:
+
+
+To use this converter you should:
+
+1. Annotate your corpus using 
+```
+cat bigfile.txt | apertium -n -d . tat-tagger | cg-proc dev/mansur.bin > bigfile_tagged.txt
+```
+where **mansur.bin** is just a file with some additional rules. You can find it [here] (https://svn.code.sf.net/p/apertium/svn/languages/apertium-tat/dev/).  
+In result you should get file, containing annotated sentences:  
+```
+^Мин/Мин<prn><pers><p1><sg><nom>$ ^үземне/үз<prn><ref><px1sg><acc>$ ^белә/бел<v><tv><prc_impf>$ ^башлаганнан/башла<vaux><ger_past><abl>$ ^бирле/бирле<post>$ ^түбән/түбән<adj>$ ^очка/оч<n><sg><dat>$ – ^ерак/ерак<adj>$ ^бабакайларга/бабакай<n><pl><dat>$ ^төшәргә/төш<v><iv><inf>$ ^ярата/ярат<v><tv><pres><p3><sg>$ ^идем/и<cop><ifi><p1><sg>$^./.<sent>$
+```
+
+2. Generate "inv_so" text file in the following format:
   
 | sentence id | source id |  
 | ------: | ------: |  
@@ -281,6 +295,20 @@ This script also needs "inv_so" text file in the following format:
 |    8 |    1 |  
 |    9 |    1 |  
 |   10 |    1 |  
+
+And place it in the same directory with script.
+
+3. Run "" python script this way:
+```
+...
+```
+
+It will take quite much time according to the size of your corpus.  
+
+4. If everything went well, you should get list of files that you need to import to MySQL database:
+```
+...
+```
 
 
 ## ChangeLog:
