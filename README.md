@@ -269,7 +269,7 @@ mysql> select * from sources where col1 > 300 limit 3;
 If you use [Apertium's] (http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output. (Script will be available soon.)  
 
 
-To use this converter you should:
+To use this converter you should:  
 1. Annotate your corpus using Apertium's tagger:
 ```
 cat bigfile.txt | apertium -n -d . tat-tagger | cg-proc dev/mansur.bin > bigfile_tagged.txt
