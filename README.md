@@ -6,13 +6,14 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
+<!---
 
 ## Features
 - Advanced search options based on any combination of different search parameters:
    * word form
    * lemma
    * set of morphological tags
-   * pattern matching (currently "*" and "?" masks are supported)
+   * pattern matching (currently "\*" and "?" masks are supported)
    * case matching
    * distance to the next word
 - It receives search queries over UNIX Domain Socket file in JSON format.
@@ -332,3 +333,4 @@ Technical info: version 3 consumes about 4 Gb RAM for the same corpus.
 22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
 Technical info: version 1 consumes about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
 
+-->
