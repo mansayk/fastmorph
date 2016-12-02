@@ -6,7 +6,7 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
-For the stable v4 see master branch.
+**For the stable v4 see master branch!**
 
 <!---
 
