@@ -8,6 +8,8 @@ Source code is available at https://github.com/mansayk/fastmorph.
 
 **For the stable v4 see master branch!**
 
+mst
+
 <!---
 
 ## Features
