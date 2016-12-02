@@ -1,4 +1,4 @@
-# fastmorph v5.0.0-alpha
+# fastmorph v5 (alpha)
 
 Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en) language.
 
