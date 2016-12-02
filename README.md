@@ -1,4 +1,7 @@
-# fastmorph v4
+# fastmorph v5.0.0-alpha
+
+**WARNING! All data below is for v4!**
+
 Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en) language.
 
 You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html). 
