@@ -2,13 +2,11 @@
 
 Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en) language.
 
-You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html). 
+You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
 **For the stable v4 see master branch!**
-
-mst
 
 <!---
 
