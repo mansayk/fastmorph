@@ -1434,7 +1434,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			memset(list_wildmatch_mask, (char)0, WORDS_ARRAY_SIZE);
 			memset(list_tags_mask, (char)0, TAGS_ARRAY_SIZE);
 
-			// Preparing word and lemma ids
+			// Preparing word and lemma ids (test)
 			for(int x = 0; x < AMOUNT_TOKENS; x++) {
 				word_id[x] = 0;
 				lemma_id[x] = 0;
@@ -1476,8 +1476,6 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 				}
 			}
 
-
-
 			time_start(&tv2);
 			// Creating threads for the big cycle
 			printf("\n\nCreating threads...");
@@ -1503,9 +1501,6 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			}
 			printf("\n  Threads finished!");
 			printf("\nThreads func_run_cycle time: %ld milliseconds.\n", time_stop(&tv2));
-			
-
-
 
 			// Summ amount of found occurences from all threads
 			size_array_found_sents_all_summ = 0;
