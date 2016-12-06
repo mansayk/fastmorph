@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - the main file
- * Version 4.2 - 2016.11.21
+ * Version v4.2.1 - 2016.12.06
  *
  * "fastmorph" is a high speed search engine for text corpora:
  * - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -37,7 +37,7 @@
  *
  **************************************************************************************/
 
-//#define VERSION			"v4.2 (2016.11.21)"		/*   Version and date								*/
+//#define VERSION			"v4.2.1 (2016.12.06)"		/*   Version and date								*/
 #define DEBUG				1				/*   Output additional debugging info						*/
 
 #define WORD_CASE			0				/*   id of words (case sensitive)						*/
@@ -1433,6 +1433,12 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			memset(list_wildmatch_case_mask, (char)0, WORDS_CASE_ARRAY_SIZE);
 			memset(list_wildmatch_mask, (char)0, WORDS_ARRAY_SIZE);
 			memset(list_tags_mask, (char)0, TAGS_ARRAY_SIZE);
+
+			// Preparing word and lemma ids
+			for(int x = 0; x < AMOUNT_TOKENS; x++) {
+				word_id[x] = 0;
+				lemma_id[x] = 0;
+			}
 
 			// Find ids and set masks for all search words, lemmas, tags and patterns
 			for(unsigned int x = 0; x < params; x++) {
