@@ -1434,7 +1434,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			memset(list_wildmatch_mask, (char)0, WORDS_ARRAY_SIZE);
 			memset(list_tags_mask, (char)0, TAGS_ARRAY_SIZE);
 
-			// Preparing word and lemma ids (test)
+			// Preparing word and lemma ids
 			for(int x = 0; x < AMOUNT_TOKENS; x++) {
 				word_id[x] = 0;
 				lemma_id[x] = 0;
