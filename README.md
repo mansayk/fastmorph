@@ -15,7 +15,7 @@ Source code is available at https://github.com/mansayk/fastmorph.
    * word form
    * lemma
    * set of morphological tags
-   * pattern matching (currently "\*" and "?" masks are supported)
+   * pattern matching (currently "*" and "?" masks are supported)
    * case matching
    * distance to the next word
 - It receives search queries over UNIX Domain Socket file in JSON format.
