@@ -1,6 +1,6 @@
 /*
- * fastmorph.c - the main file
- * Version v4.2.1 - 2016.12.06
+ * fastmorph.c - Fast corpus search engine.
+ * Version v4.3.0 - 2017.01.14
  *
  * "fastmorph" is a high speed search engine for text corpora:
  * - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -31,17 +31,13 @@
 
 #include "credentials.h"	/*   DB login, password... */
 
-
-
-
-
 /**************************************************************************************
  *
  *                          Configuration
  *
  **************************************************************************************/
 
-//#define VERSION			"v4.2.1 (2016.12.06)"		/*   Version and date								*/
+//#define VERSION			"v..."				/*   Version and date								*/
 #define DEBUG				1				/*   Output additional debugging info						*/
 
 #define WORD_CASE			0				/*   id of words (case sensitive)						*/
@@ -51,7 +47,7 @@
 #define WILD_CASE			4				/*   id of wild (case sensitive)						*/
 #define WILD				5				/*   id of wild									*/
 //#define CASE_SENSITIVE		9				/*   id of case	sensitive							*/
-#define SEARCH_TYPES_OFFSET		10				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49 bits; 50-63 are free	*/
+#define SEARCH_TYPES_OFFSET		9				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49, 50-59 bits; 60-63 are free*/
 #define AMOUNT_SENTENCES		10015946			/*   Amount of sentences							*/
 //#define AMOUNT_SENTENCES		64900				/*   Amount of sentences	TEST						*/
 #define SIZE_ARRAY_MAIN			(139991551 + AMOUNT_SENTENCES)	/*   Size of array_main								*/
@@ -66,10 +62,10 @@
 #define SOURCES_ARRAY_SIZE		2750				/*   Size of sources arrays							*/
 #define SOURCE_TYPES_BUFFER_SIZE	32				/*   Length of buffer for source types (book, www...ru)				*/
 #define MYSQL_LOAD_LIMIT		100000				/*   Portions to load from MySQL: SELECT ... LIMIT 100000			*/
-#define FOUND_SENTENCES_LIMIT		50				/*   Amount of found sentences to collect					*/
+#define FOUND_SENTENCES_LIMIT		100				/*   Amount of found sentences to collect					*/
 #define FOUND_SENTENCES_BUFFER		10240				/*   Buffer for found sentences							*/
 #define SEARCH_THREADS			4				/*   Threads count to perform search: depends on CPU cores			*/
-#define AMOUNT_TOKENS			5				/*   Max amount of words to search						*/
+#define AMOUNT_TOKENS			6				/*   Max amount of words to search						*/
 #define SOCKET_BUFFER_SIZE		10240				/*   Size of input and output buffers for socket				*/
 
 // HTML tags for highlighting found words
@@ -253,7 +249,6 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", word[j]);
 			}
 			i += t[i+1].size + 1;
-
 		// Lemmas
 		} else if(jsoneq(strin, &t[i], "lemma") == 0) {
 			errno = 0;
@@ -269,7 +264,6 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", lemma[j]);
 			}
 			i += t[i+1].size + 1;
-
 		// Tags	
 		} else if(jsoneq(strin, &t[i], "tags") == 0) {
 			errno = 0;
@@ -285,7 +279,6 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", tags[j]);
 			}
 			i += t[i+1].size + 1;
-
 		// Wildmatch strings
 		} else if(jsoneq(strin, &t[i], "wildmatch") == 0) {
 			errno = 0;
@@ -301,7 +294,6 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", wildmatch[j]);
 			}
 			i += t[i+1].size + 1;
-
 		// Distances from
 		} else if(jsoneq(strin, &t[i], "dist_from") == 0) {
 			errno = 0;
@@ -325,7 +317,6 @@ int func_jsmn_json(char *strin, int len)
 				printf("%u\n", dist_from[j]);
 			}
 			i += t[i+1].size + 1;
-
 		// Distances to	
 		} else if(jsoneq(strin, &t[i], "dist_to") == 0) {
 			errno = 0;
@@ -349,7 +340,6 @@ int func_jsmn_json(char *strin, int len)
 				printf("%u\n", dist_to[j]);
 			}
 			i += t[i+1].size + 1;
-
 		// Types
 		} else if(jsoneq(strin, &t[i], "types") == 0) {
 			printf("- types: %.*s / ", t[i+1].end - t[i+1].start, strin + t[i+1].start);
@@ -812,10 +802,10 @@ static inline int func_cmp_ints(const void *a, const void *b)
 /*
  * Build text sentences from array_main
  */
-int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, unsigned long long z1, unsigned long long z2, unsigned long long z3, unsigned long long z4, unsigned long long z5)
+int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, unsigned long long z1, unsigned long long z2, unsigned long long z3, unsigned long long z4, unsigned long long z5, unsigned long long z6)
 {
 	int x, y;
-	unsigned long long z[] = {z1, z2, z3, z4, z5};
+	unsigned long long z[] = {z1, z2, z3, z4, z5, z6};
 	int lspace = 1;
 	int rspace = 1;
 	char bufout[SOCKET_BUFFER_SIZE];
@@ -952,6 +942,7 @@ void * func_run_cycle(struct thread_data *thdata)
 	const unsigned int find3_word = word_id[2];
 	const unsigned int find4_word = word_id[3];
 	const unsigned int find5_word = word_id[4];
+	const unsigned int find6_word = word_id[5];
 
 	if(DEBUG) {
 		printf("\n\nDEBUG> find1_word: %d", find1_word);
@@ -959,6 +950,7 @@ void * func_run_cycle(struct thread_data *thdata)
 		printf("\nDEBUG> find3_word: %d", find3_word);
 		printf("\nDEBUG> find4_word: %d", find4_word);
 		printf("\nDEBUG> find5_word: %d", find5_word);
+		printf("\nDEBUG> find6_word: %d", find6_word);
 	}
 	
 	// lemmas
@@ -967,6 +959,7 @@ void * func_run_cycle(struct thread_data *thdata)
 	const unsigned int find3_lemma = lemma_id[2];
 	const unsigned int find4_lemma = lemma_id[3];
 	const unsigned int find5_lemma = lemma_id[4];
+	const unsigned int find6_lemma = lemma_id[5];
 
 	if(DEBUG) {
 		printf("\n\nDEBUG> find1_lemma: %d", find1_lemma);
@@ -974,6 +967,7 @@ void * func_run_cycle(struct thread_data *thdata)
 		printf("\nDEBUG> find3_lemma: %d", find3_lemma);
 		printf("\nDEBUG> find4_lemma: %d", find4_lemma);
 		printf("\nDEBUG> find5_lemma: %d", find5_lemma);
+		printf("\nDEBUG> find6_lemma: %d", find6_lemma);
 	}
 
 	// distances
@@ -989,6 +983,9 @@ void * func_run_cycle(struct thread_data *thdata)
 	const unsigned int dist4_start = dist_from[3];
 	const unsigned int dist4_end = dist_to[3];
 
+	const unsigned int dist5_start = dist_from[4];
+	const unsigned int dist5_end = dist_to[4];
+
 	// last position
 	register unsigned long long last_pos = thdata->last_pos;
 
@@ -998,11 +995,13 @@ void * func_run_cycle(struct thread_data *thdata)
 	unsigned long long z3 = 0;
 	unsigned long long z4 = 0;
 	unsigned long long z5 = 0;
+	unsigned long long z6 = 0;
 
 	unsigned long long x2 = 0;
 	unsigned long long x3 = 0;
 	unsigned long long x4 = 0;
 	unsigned long long x5 = 0;
+	unsigned long long x6 = 0;
 
 	unsigned int found_all = 0;
 	unsigned long long sent_begin = 0;
@@ -1105,18 +1104,55 @@ void * func_run_cycle(struct thread_data *thdata)
 															  || (list_wildmatch_mask[array_words[z5]] & ((char)1 << 4)))
 															) {
 
-															if(z1 > last_pos && found_limit) {
-																sem_wait(&count_sem);
-																if(found_limit) {
-																	--found_limit;
-																	sem_post(&count_sem);
-																	func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5);
-																	last_pos = z1;
-																} else {
-																	sem_post(&count_sem);
+															// param6
+															if(params > 5) {
+																z6 = z5 + dist5_start;
+																x6 = z5 + dist5_end;
+																while(z6 < main_end && z6 <= x6 && array_words[z6]) {
+																	if(
+																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WORD_CASE))) 
+																		  || array_words_case[z6] == find6_word) &&
+																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WORD))) 
+																		  || array_words[z6] == find6_word) &&
+																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + LEMMA))) 
+																		  || array_lemmas[z6] == find6_lemma) &&
+																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + TAGS))) 
+																		  || (list_tags_mask[array_tags[z6]] & ((char)1 << 5))) &&
+																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WILD_CASE))) 
+																		  || (list_wildmatch_case_mask[array_words_case[z6]] & ((char)1 << 5))) &&
+																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WILD))) 
+																		  || (list_wildmatch_mask[array_words[z6]] & ((char)1 << 5)))
+																		) {
+
+																		if(z1 > last_pos && found_limit) {
+																			sem_wait(&count_sem);
+																			if(found_limit) {
+																				--found_limit;
+																				sem_post(&count_sem);
+																				func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
+																				last_pos = z1;
+																			} else {
+																				sem_post(&count_sem);
+																			}
+																		}
+																		++found_all;
+																	} 
+																	++z6;
 																}
+															} else {
+																if(z1 > last_pos && found_limit) {
+																	sem_wait(&count_sem);
+																	if(found_limit) {
+																		--found_limit;
+																		sem_post(&count_sem);
+																		func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
+																		last_pos = z1;
+																	} else {
+																		sem_post(&count_sem);
+																	}
+																}
+																++found_all;
 															}
-															++found_all;
 														} 
 														++z5;
 													}
@@ -1126,7 +1162,7 @@ void * func_run_cycle(struct thread_data *thdata)
 														if(found_limit) {
 															--found_limit;
 															sem_post(&count_sem);
-															func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, 0);
+															func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
 															last_pos = z1;
 														} else {
 															sem_post(&count_sem);
@@ -1143,7 +1179,7 @@ void * func_run_cycle(struct thread_data *thdata)
 											if(found_limit) {
 												--found_limit;
 												sem_post(&count_sem);
-												func_build_sents(curnt_sent, sent_begin, z1, z2, z3, 0, 0);
+												func_build_sents(curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
 												last_pos = z1;
 											} else {
 												sem_post(&count_sem);
@@ -1160,7 +1196,7 @@ void * func_run_cycle(struct thread_data *thdata)
 								if(found_limit) {
 									--found_limit;
 									sem_post(&count_sem);
-									func_build_sents(curnt_sent, sent_begin, z1, z2, 0, 0, 0);
+									func_build_sents(curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
 									last_pos = z1;
 								} else {
 									sem_post(&count_sem);
@@ -1177,7 +1213,7 @@ void * func_run_cycle(struct thread_data *thdata)
 					if(found_limit) {
 						--found_limit;
 						sem_post(&count_sem);
-						func_build_sents(curnt_sent, sent_begin, z1, 0, 0, 0, 0);
+						func_build_sents(curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
 						last_pos = z1;
 					} else {
 						sem_post(&count_sem);
