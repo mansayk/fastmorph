@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v4.3.0 - 2017.01.14
+ * Version v5.0.0 - 2017.02.16
  *
  * "fastmorph" is a high speed search engine for text corpora:
  * - loads all preprocessed data from MySQL (MariaDB) into RAM;
