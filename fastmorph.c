@@ -48,10 +48,10 @@
 #define WILD				5				/*   id of wild									*/
 //#define CASE_SENSITIVE		9				/*   id of case	sensitive							*/
 #define SEARCH_TYPES_OFFSET		9				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49, 50-59 bits; 60-63 are free*/
-//#define AMOUNT_SENTENCES		10015946			/*   Amount of sentences							*/
-#define AMOUNT_SENTENCES		64900				/*   Amount of sentences	TEST						*/
-//#define SIZE_ARRAY_MAIN			(139991551 + AMOUNT_SENTENCES)	/*   Size of array_main								*/
-#define SIZE_ARRAY_MAIN		(1000000 + AMOUNT_SENTENCES)	/*   Size of array_main		TEST						*/
+#define AMOUNT_SENTENCES		10015946			/*   Amount of sentences							*/
+//#define AMOUNT_SENTENCES		64900				/*   Amount of sentences	TEST						*/
+#define SIZE_ARRAY_MAIN			(139991551 + AMOUNT_SENTENCES)	/*   Size of array_main								*/
+//#define SIZE_ARRAY_MAIN		(1000000 + AMOUNT_SENTENCES)	/*   Size of array_main		TEST						*/
 #define TAGS_ARRAY_SIZE			14864				/*   Size of tags combinations array						*/
 #define TAGS_UNIQ_BUFFER_SIZE		32				/*   Length of buffer for uniq tags 						*/
 #define TAGS_UNIQ_ARRAY_SIZE		134				/*   Amount of uniq tags	 						*/
@@ -961,22 +961,11 @@ void * func_run_cycle(struct thread_data *thdata)
 	const unsigned long long main_begin = thdata->start;
 	register const unsigned long long main_end = thdata->finish;
 
-
-
-
-
-
-
 	while(1) {
+		// set threads to waiting state
 		pthread_mutex_lock(&mutex);
-		while(condition == 0)
-			pthread_cond_wait(&cond, &mutex);
-		condition = 0;
+		pthread_cond_wait(&cond, &mutex);
 		pthread_mutex_unlock(&mutex);
-
-
-
-
 
 		// search types for every token
 		register const unsigned long long search_types = morph_types;
@@ -1271,24 +1260,16 @@ void * func_run_cycle(struct thread_data *thdata)
 		}
 		thdata->last_pos = last_pos;
 		thdata->found_num = found_all;
-		//////////////////pthread_exit(NULL);
-
-		/*
+	
+		// Decrementing counter and sending signal to func_run_socket function
 		pthread_mutex_lock(&mutex2);
-		finished++;
-		pthread_cond_broadcast(&cond2);
+		--finished;
+		//pthread_cond_broadcast(&cond2);
+		pthread_cond_signal(&cond2);
 		pthread_mutex_unlock(&mutex2);
-		*/
 
-
-
-
+		//pthread_exit(NULL);
 	} // while(1)
-
-
-
-
-
 }
 
 
@@ -1512,14 +1493,6 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 		exit(-1);
 	}
 
-
-
-
-
-
-
-
-
 	// Creating threads for the big cycle
 	printf("\n\nCreating threads...");
 	for(t = 0; t < SEARCH_THREADS; t++) {
@@ -1533,31 +1506,6 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			exit(-1);
 		}
 	}
-	/*
-	for(t = 0; t < SEARCH_THREADS; t++){
-		// wait for our thread to finish before continuing
-		rc_thread[t] = pthread_join(threads[t], NULL);
-		if(rc_thread[t]) {
-			printf("\n  ERROR; return code from pthread_join() is %d", rc_thread[t]);
-			exit(-1);
-		}
-		printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
-	}
-	printf("\n  Threads finished!");
-	printf("\nThreads func_run_cycle time: %ld milliseconds.\n", time_stop(&tv2));
-	*/
-
-
-
-
-
-
-
-
-
-
-
-
 
 	while(1) {
 		if((cl = accept(fd, NULL, NULL)) == -1) {
@@ -1628,71 +1576,20 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 
 			time_start(&tv2);
 
-
-
-
-
-
-
-
 			// broadcast to workers to work
-			///////////////////////////condition = 1;
-			///////////////////////////pthread_mutex_lock(&mutex);
-			///////////////////////////pthread_cond_signal(&cond);
-			///////////////////////////pthread_cond_broadcast(&cond);
-			///////////////////////////pthread_mutex_unlock(&mutex);
+			pthread_mutex_lock(&mutex);
+			finished = SEARCH_THREADS;
+			pthread_cond_broadcast(&cond);
+			pthread_mutex_unlock(&mutex);
 
 			// wait for workers to finish
-			//pthread_mutex_lock(&mutex2);
-			//while(finished != SEARCH_THREADS)
-			//	pthread_cond_wait(&cond2, &mutex2);
-			//pthread_mutex_unlock(&mutex2);
+			pthread_mutex_lock(&mutex2);
+			while(finished)
+				pthread_cond_wait(&cond2, &mutex2);
+			pthread_mutex_unlock(&mutex2);
 
-
-
-
-
-
-			/*
-			// Creating threads for the big cycle
-			printf("\n\nCreating threads...");
-			for(t = 0; t < SEARCH_THREADS; t++) {
-				printf("\n  Thread: creating thread %d", t);
-				thread_data_array[t].id = t;
-
-				// Create worker thread
-				rc_thread[t] = pthread_create(&threads[t], NULL, (void *) &func_run_cycle, (void *) &thread_data_array[t]);
-				if(rc_thread[t]) {
-					printf("\n  ERROR: return code from pthread_create() is %d", rc_thread[t]);
-					exit(-1);
-				}
-			}
-			for(t = 0; t < SEARCH_THREADS; t++){
-				// wait for our thread to finish before continuing
-				rc_thread[t] = pthread_join(threads[t], NULL);
-				if(rc_thread[t]) {
-					printf("\n  ERROR; return code from pthread_join() is %d", rc_thread[t]);
-					exit(-1);
-				}
-				printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
-			}
-			*/
 			printf("\n  Threads finished!");
 			printf("\nThreads func_run_cycle time: %ld milliseconds.\n", time_stop(&tv2));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 			// Summ amount of found occurences from all threads
 			size_array_found_sents_all_summ = 0;
@@ -1741,6 +1638,17 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			close(cl);
 		}
 	}
+
+	// wait for our thread to finish before continuing
+	for(t = 0; t < SEARCH_THREADS; t++){
+		rc_thread[t] = pthread_join(threads[t], NULL);
+		if(rc_thread[t]) {
+			printf("\n  ERROR; return code from pthread_join() is %d", rc_thread[t]);
+			exit(-1);
+		}
+		printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
+	}
+
 	close(fd);
 	unlink(socket_path);	
 	pthread_exit(NULL);
