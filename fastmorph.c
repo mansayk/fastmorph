@@ -151,16 +151,8 @@ struct thread_data {							/*   Structure to communicate with threads   */
 	unsigned long long finish;
 	unsigned long long last_pos;
 	unsigned int found_num;
-
-
-
-	////////////pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-	////////////pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-	////////////int condition = 0;
-
-
-
-
+	//pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	//pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 };
 struct thread_data thread_data_array[SEARCH_THREADS];
 
@@ -170,23 +162,11 @@ unsigned long long morph_types;						/*   Bits with search data: TODO: DELETE   
 char morph_last_pos[WORDS_BUFFER_SIZE];					/*   The id of last found token to continue from   */
 unsigned int params;							/*   Number of tokens (1-5) to search: TODO: DELETE   */
 
-
-
-
-
-
-
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond2 = PTHREAD_COND_INITIALIZER;
-
-int condition = 0;
 int finished = 0;
-
-
-
-
 
 
 /**************************************************************************************
