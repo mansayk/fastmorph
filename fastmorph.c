@@ -179,7 +179,7 @@ unsigned int params;							/*   Number of tokens (1-5) to search: TODO: DELETE  
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 int condition = 0;
-
+int finished = 0;
 
 
 
@@ -1271,8 +1271,10 @@ void * func_run_cycle(struct thread_data *thdata)
 		//////////////////pthread_exit(NULL);
 
 
-
-
+		pthread_mutex_lock(&mutex2);
+		finished++;
+		pthread_cond_broadcast(&cond2);
+		pthread_mutex_unlock(&mutex2);
 
 
 
@@ -1517,13 +1519,13 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 
 	// Creating threads for the big cycle
 	printf("\n\nCreating threads...");
-	for(t = 0; t < SEARCH_THREADS; t++){
+	for(t = 0; t < SEARCH_THREADS; t++) {
 		printf("\n  Thread: creating thread %d", t);
 		thread_data_array[t].id = t;
 
 		// Create worker thread
 		rc_thread[t] = pthread_create(&threads[t], NULL, (void *) &func_run_cycle, (void *) &thread_data_array[t]);
-		if(rc_thread[t]){
+		if(rc_thread[t]) {
 			printf("\n  ERROR: return code from pthread_create() is %d", rc_thread[t]);
 			exit(-1);
 		}
@@ -1630,25 +1632,34 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 
 
 
-
+			// broadcast to workers to work
 			///////////////////////////condition = 1;
 			///////////////////////////pthread_mutex_lock(&mutex);
 			///////////////////////////pthread_cond_signal(&cond);
 			///////////////////////////pthread_cond_broadcast(&cond);
 			///////////////////////////pthread_mutex_unlock(&mutex);
 
+			// wait for workers to finish
+			//pthread_mutex_lock(&mutex);
+			//while (finished != SEARCH_THREADS)
+			//	pthread_cond_wait(&cond, &mutex);
+			//pthread_mutex_unlock(&mutex);
+
+
+
+
 
 
 			/*
 			// Creating threads for the big cycle
 			printf("\n\nCreating threads...");
-			for(t = 0; t < SEARCH_THREADS; t++){
+			for(t = 0; t < SEARCH_THREADS; t++) {
 				printf("\n  Thread: creating thread %d", t);
 				thread_data_array[t].id = t;
 
 				// Create worker thread
 				rc_thread[t] = pthread_create(&threads[t], NULL, (void *) &func_run_cycle, (void *) &thread_data_array[t]);
-				if(rc_thread[t]){
+				if(rc_thread[t]) {
 					printf("\n  ERROR: return code from pthread_create() is %d", rc_thread[t]);
 					exit(-1);
 				}
