@@ -48,10 +48,10 @@
 #define WILD				5				/*   id of wild									*/
 //#define CASE_SENSITIVE		9				/*   id of case	sensitive							*/
 #define SEARCH_TYPES_OFFSET		9				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49, 50-59 bits; 60-63 are free*/
-#define AMOUNT_SENTENCES		10015946			/*   Amount of sentences							*/
-//#define AMOUNT_SENTENCES		64900				/*   Amount of sentences	TEST						*/
-#define SIZE_ARRAY_MAIN			(139991551 + AMOUNT_SENTENCES)	/*   Size of array_main								*/
-//#define SIZE_ARRAY_MAIN		(1000000 + AMOUNT_SENTENCES)	/*   Size of array_main		TEST						*/
+//#define AMOUNT_SENTENCES		10015946			/*   Amount of sentences							*/
+#define AMOUNT_SENTENCES		64900				/*   Amount of sentences	TEST						*/
+//#define SIZE_ARRAY_MAIN			(139991551 + AMOUNT_SENTENCES)	/*   Size of array_main								*/
+#define SIZE_ARRAY_MAIN		(1000000 + AMOUNT_SENTENCES)	/*   Size of array_main		TEST						*/
 #define TAGS_ARRAY_SIZE			14864				/*   Size of tags combinations array						*/
 #define TAGS_UNIQ_BUFFER_SIZE		32				/*   Length of buffer for uniq tags 						*/
 #define TAGS_UNIQ_ARRAY_SIZE		134				/*   Amount of uniq tags	 						*/
@@ -151,6 +151,16 @@ struct thread_data {							/*   Structure to communicate with threads   */
 	unsigned long long finish;
 	unsigned long long last_pos;
 	unsigned int found_num;
+
+
+
+	////////////pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	////////////pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	////////////int condition = 0;
+
+
+
+
 };
 struct thread_data thread_data_array[SEARCH_THREADS];
 
@@ -159,6 +169,21 @@ unsigned int size_array_found_sents_all_summ;				/*   For statistics: ...found a
 unsigned long long morph_types;						/*   Bits with search data: TODO: DELETE   */
 char morph_last_pos[WORDS_BUFFER_SIZE];					/*   The id of last found token to continue from   */
 unsigned int params;							/*   Number of tokens (1-5) to search: TODO: DELETE   */
+
+
+
+
+
+
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+int condition = 0;
+
+
+
+
+
 
 
 /**************************************************************************************
@@ -933,300 +958,332 @@ void * func_run_cycle(struct thread_data *thdata)
 	const unsigned long long main_begin = thdata->start;
 	register const unsigned long long main_end = thdata->finish;
 
-	// search types for every token
-	register const unsigned long long search_types = morph_types;
 
-	// words
-	const unsigned int find1_word = word_id[0];
-	const unsigned int find2_word = word_id[1];
-	const unsigned int find3_word = word_id[2];
-	const unsigned int find4_word = word_id[3];
-	const unsigned int find5_word = word_id[4];
-	const unsigned int find6_word = word_id[5];
 
-	if(DEBUG) {
-		printf("\n\nDEBUG> find1_word: %d", find1_word);
-		printf("\nDEBUG> find2_word: %d", find2_word);
-		printf("\nDEBUG> find3_word: %d", find3_word);
-		printf("\nDEBUG> find4_word: %d", find4_word);
-		printf("\nDEBUG> find5_word: %d", find5_word);
-		printf("\nDEBUG> find6_word: %d", find6_word);
-	}
-	
-	// lemmas
-	const unsigned int find1_lemma = lemma_id[0];
-	const unsigned int find2_lemma = lemma_id[1];
-	const unsigned int find3_lemma = lemma_id[2];
-	const unsigned int find4_lemma = lemma_id[3];
-	const unsigned int find5_lemma = lemma_id[4];
-	const unsigned int find6_lemma = lemma_id[5];
 
-	if(DEBUG) {
-		printf("\n\nDEBUG> find1_lemma: %d", find1_lemma);
-		printf("\nDEBUG> find2_lemma: %d", find2_lemma);
-		printf("\nDEBUG> find3_lemma: %d", find3_lemma);
-		printf("\nDEBUG> find4_lemma: %d", find4_lemma);
-		printf("\nDEBUG> find5_lemma: %d", find5_lemma);
-		printf("\nDEBUG> find6_lemma: %d", find6_lemma);
-	}
 
-	// distances
-	const unsigned int dist1_start = dist_from[0];
-	const unsigned int dist1_end = dist_to[0];
 
-	const unsigned int dist2_start = dist_from[1];
-	const unsigned int dist2_end = dist_to[1];
 
-	const unsigned int dist3_start = dist_from[2];
-	const unsigned int dist3_end = dist_to[2];
+	while(1) {
+		pthread_mutex_lock(&mutex);
+		while(condition == 0)
+			pthread_cond_wait(&cond, &mutex);
+		condition = 0;
+		pthread_mutex_unlock(&mutex);
 
-	const unsigned int dist4_start = dist_from[3];
-	const unsigned int dist4_end = dist_to[3];
 
-	const unsigned int dist5_start = dist_from[4];
-	const unsigned int dist5_end = dist_to[4];
 
-	// last position
-	register unsigned long long last_pos = thdata->last_pos;
 
-	// positions
-	register unsigned long long z1 = main_begin;
-	unsigned long long z2 = 0;
-	unsigned long long z3 = 0;
-	unsigned long long z4 = 0;
-	unsigned long long z5 = 0;
-	unsigned long long z6 = 0;
 
-	unsigned long long x2 = 0;
-	unsigned long long x3 = 0;
-	unsigned long long x4 = 0;
-	unsigned long long x5 = 0;
-	unsigned long long x6 = 0;
+		// search types for every token
+		register const unsigned long long search_types = morph_types;
 
-	unsigned int found_all = 0;
-	unsigned long long sent_begin = 0;
-	register unsigned int curnt_sent = 0;
+		// words
+		const unsigned int find1_word = word_id[0];
+		const unsigned int find2_word = word_id[1];
+		const unsigned int find3_word = word_id[2];
+		const unsigned int find4_word = word_id[3];
+		const unsigned int find5_word = word_id[4];
+		const unsigned int find6_word = word_id[5];
 
-	// param1
-	while(z1 < main_end) {
-		if((array_words_case[z1] || ((curnt_sent = array_lemmas[z1]) && (sent_begin = z1) && ++z1)) &&
-			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WORD_CASE))) 
-			  || array_words_case[z1] == find1_word) &&
-			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WORD))) 
-			  || array_words[z1] == find1_word) &&
-			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + LEMMA))) 
-			  || array_lemmas[z1] == find1_lemma) &&
-			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + TAGS))) 
-			  || (list_tags_mask[array_tags[z1]] & ((char)1 << 0))) &&
-			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WILD_CASE))) 
-			  || (list_wildmatch_case_mask[array_words_case[z1]] & ((char)1 << 0))) &&
-			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WILD))) 
-			  || (list_wildmatch_mask[array_words[z1]] & ((char)1 << 0)))
-			) {
-			
-			// param2
-			if(params > 1) {
-				z2 = z1 + dist1_start;
-				x2 = z1 + dist1_end;
-				while(z2 < main_end && z2 <= x2 && array_words_case[z2])  {
-					if(
-						(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WORD_CASE))) 
-						  || array_words_case[z2] == find2_word) &&
-						(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WORD))) 
-						  || array_words[z2] == find2_word) &&
-						(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + LEMMA))) 
-						  || array_lemmas[z2] == find2_lemma) &&
-						(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + TAGS))) 
-						  || (list_tags_mask[array_tags[z2]] & ((char)1 << 1))) &&
-						(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WILD_CASE))) 
-						  || (list_wildmatch_case_mask[array_words_case[z2]] & ((char)1 << 1))) &&
-						(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WILD))) 
-						  || (list_wildmatch_mask[array_words[z2]] & ((char)1 << 1)))
-						) {
+		if(DEBUG) {
+			printf("\n\nDEBUG> find1_word: %d", find1_word);
+			printf("\nDEBUG> find2_word: %d", find2_word);
+			printf("\nDEBUG> find3_word: %d", find3_word);
+			printf("\nDEBUG> find4_word: %d", find4_word);
+			printf("\nDEBUG> find5_word: %d", find5_word);
+			printf("\nDEBUG> find6_word: %d", find6_word);
+		}
+		
+		// lemmas
+		const unsigned int find1_lemma = lemma_id[0];
+		const unsigned int find2_lemma = lemma_id[1];
+		const unsigned int find3_lemma = lemma_id[2];
+		const unsigned int find4_lemma = lemma_id[3];
+		const unsigned int find5_lemma = lemma_id[4];
+		const unsigned int find6_lemma = lemma_id[5];
 
-						// param3
-						if(params > 2) {
-							z3 = z2 + dist2_start;
-							x3 = z2 + dist2_end;
-							while(z3 < main_end && z3 <= x3 && array_words[z3]) {
-								if(
-									(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WORD_CASE))) 
-									  || array_words_case[z3] == find3_word) &&
-									(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WORD))) 
-									  || array_words[z3] == find3_word) &&
-									(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + LEMMA))) 
-									  || array_lemmas[z3] == find3_lemma) &&
-									(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + TAGS))) 
-									  || (list_tags_mask[array_tags[z3]] & ((char)1 << 2))) &&
-									(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WILD_CASE))) 
-									  || (list_wildmatch_case_mask[array_words_case[z3]] & ((char)1 << 2))) &&
-									(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WILD))) 
-									  || (list_wildmatch_mask[array_words[z3]] & ((char)1 << 2)))
-									) {
+		if(DEBUG) {
+			printf("\n\nDEBUG> find1_lemma: %d", find1_lemma);
+			printf("\nDEBUG> find2_lemma: %d", find2_lemma);
+			printf("\nDEBUG> find3_lemma: %d", find3_lemma);
+			printf("\nDEBUG> find4_lemma: %d", find4_lemma);
+			printf("\nDEBUG> find5_lemma: %d", find5_lemma);
+			printf("\nDEBUG> find6_lemma: %d", find6_lemma);
+		}
 
-									// param4
-									if(params > 3) {
-										z4 = z3 + dist3_start;
-										x4 = z3 + dist3_end;
-										while(z4 < main_end && z4 <= x4 && array_words[z4]) {
-											if(
-												(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WORD_CASE))) 
-												  || array_words_case[z4] == find4_word) &&
-												(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WORD))) 
-												  || array_words[z4] == find4_word) &&
-												(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + LEMMA))) 
-												  || array_lemmas[z4] == find4_lemma) &&
-												(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + TAGS))) 
-												  || (list_tags_mask[array_tags[z4]] & ((char)1 << 3))) &&
-												(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WILD_CASE))) 
-												  || (list_wildmatch_case_mask[array_words_case[z4]] & ((char)1 << 3))) &&
-												(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WILD))) 
-												  || (list_wildmatch_mask[array_words[z4]] & ((char)1 << 3)))
-												) {
+		// distances
+		const unsigned int dist1_start = dist_from[0];
+		const unsigned int dist1_end = dist_to[0];
 
-												// param5
-												if(params > 4) {
-													z5 = z4 + dist4_start;
-													x5 = z4 + dist4_end;
-													while(z5 < main_end && z5 <= x5 && array_words[z5]) {
-														if(
-															(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WORD_CASE))) 
-															  || array_words_case[z5] == find5_word) &&
-															(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WORD))) 
-															  || array_words[z5] == find5_word) &&
-															(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + LEMMA))) 
-															  || array_lemmas[z5] == find5_lemma) &&
-															(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + TAGS))) 
-															  || (list_tags_mask[array_tags[z5]] & ((char)1 << 4))) &&
-															(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WILD_CASE))) 
-															  || (list_wildmatch_case_mask[array_words_case[z5]] & ((char)1 << 4))) &&
-															(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WILD))) 
-															  || (list_wildmatch_mask[array_words[z5]] & ((char)1 << 4)))
-															) {
+		const unsigned int dist2_start = dist_from[1];
+		const unsigned int dist2_end = dist_to[1];
 
-															// param6
-															if(params > 5) {
-																z6 = z5 + dist5_start;
-																x6 = z5 + dist5_end;
-																while(z6 < main_end && z6 <= x6 && array_words[z6]) {
-																	if(
-																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WORD_CASE))) 
-																		  || array_words_case[z6] == find6_word) &&
-																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WORD))) 
-																		  || array_words[z6] == find6_word) &&
-																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + LEMMA))) 
-																		  || array_lemmas[z6] == find6_lemma) &&
-																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + TAGS))) 
-																		  || (list_tags_mask[array_tags[z6]] & ((char)1 << 5))) &&
-																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WILD_CASE))) 
-																		  || (list_wildmatch_case_mask[array_words_case[z6]] & ((char)1 << 5))) &&
-																		(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WILD))) 
-																		  || (list_wildmatch_mask[array_words[z6]] & ((char)1 << 5)))
-																		) {
+		const unsigned int dist3_start = dist_from[2];
+		const unsigned int dist3_end = dist_to[2];
 
-																		if(z1 > last_pos && found_limit) {
-																			sem_wait(&count_sem);
-																			if(found_limit) {
-																				--found_limit;
-																				sem_post(&count_sem);
-																				func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
-																				last_pos = z1;
-																			} else {
-																				sem_post(&count_sem);
+		const unsigned int dist4_start = dist_from[3];
+		const unsigned int dist4_end = dist_to[3];
+
+		const unsigned int dist5_start = dist_from[4];
+		const unsigned int dist5_end = dist_to[4];
+
+		// last position
+		register unsigned long long last_pos = thdata->last_pos;
+
+		// positions
+		register unsigned long long z1 = main_begin;
+		unsigned long long z2 = 0;
+		unsigned long long z3 = 0;
+		unsigned long long z4 = 0;
+		unsigned long long z5 = 0;
+		unsigned long long z6 = 0;
+
+		unsigned long long x2 = 0;
+		unsigned long long x3 = 0;
+		unsigned long long x4 = 0;
+		unsigned long long x5 = 0;
+		unsigned long long x6 = 0;
+
+		unsigned int found_all = 0;
+		unsigned long long sent_begin = 0;
+		register unsigned int curnt_sent = 0;
+
+		// param1
+		while(z1 < main_end) {
+			if((array_words_case[z1] || ((curnt_sent = array_lemmas[z1]) && (sent_begin = z1) && ++z1)) &&
+				(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WORD_CASE))) 
+				  || array_words_case[z1] == find1_word) &&
+				(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WORD))) 
+				  || array_words[z1] == find1_word) &&
+				(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + LEMMA))) 
+				  || array_lemmas[z1] == find1_lemma) &&
+				(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + TAGS))) 
+				  || (list_tags_mask[array_tags[z1]] & ((char)1 << 0))) &&
+				(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WILD_CASE))) 
+				  || (list_wildmatch_case_mask[array_words_case[z1]] & ((char)1 << 0))) &&
+				(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 0 + WILD))) 
+				  || (list_wildmatch_mask[array_words[z1]] & ((char)1 << 0)))
+				) {
+				
+				// param2
+				if(params > 1) {
+					z2 = z1 + dist1_start;
+					x2 = z1 + dist1_end;
+					while(z2 < main_end && z2 <= x2 && array_words_case[z2])  {
+						if(
+							(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WORD_CASE))) 
+							  || array_words_case[z2] == find2_word) &&
+							(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WORD))) 
+							  || array_words[z2] == find2_word) &&
+							(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + LEMMA))) 
+							  || array_lemmas[z2] == find2_lemma) &&
+							(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + TAGS))) 
+							  || (list_tags_mask[array_tags[z2]] & ((char)1 << 1))) &&
+							(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WILD_CASE))) 
+							  || (list_wildmatch_case_mask[array_words_case[z2]] & ((char)1 << 1))) &&
+							(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 1 + WILD))) 
+							  || (list_wildmatch_mask[array_words[z2]] & ((char)1 << 1)))
+							) {
+
+							// param3
+							if(params > 2) {
+								z3 = z2 + dist2_start;
+								x3 = z2 + dist2_end;
+								while(z3 < main_end && z3 <= x3 && array_words[z3]) {
+									if(
+										(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WORD_CASE))) 
+										  || array_words_case[z3] == find3_word) &&
+										(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WORD))) 
+										  || array_words[z3] == find3_word) &&
+										(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + LEMMA))) 
+										  || array_lemmas[z3] == find3_lemma) &&
+										(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + TAGS))) 
+										  || (list_tags_mask[array_tags[z3]] & ((char)1 << 2))) &&
+										(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WILD_CASE))) 
+										  || (list_wildmatch_case_mask[array_words_case[z3]] & ((char)1 << 2))) &&
+										(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 2 + WILD))) 
+										  || (list_wildmatch_mask[array_words[z3]] & ((char)1 << 2)))
+										) {
+
+										// param4
+										if(params > 3) {
+											z4 = z3 + dist3_start;
+											x4 = z3 + dist3_end;
+											while(z4 < main_end && z4 <= x4 && array_words[z4]) {
+												if(
+													(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WORD_CASE))) 
+													  || array_words_case[z4] == find4_word) &&
+													(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WORD))) 
+													  || array_words[z4] == find4_word) &&
+													(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + LEMMA))) 
+													  || array_lemmas[z4] == find4_lemma) &&
+													(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + TAGS))) 
+													  || (list_tags_mask[array_tags[z4]] & ((char)1 << 3))) &&
+													(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WILD_CASE))) 
+													  || (list_wildmatch_case_mask[array_words_case[z4]] & ((char)1 << 3))) &&
+													(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 3 + WILD))) 
+													  || (list_wildmatch_mask[array_words[z4]] & ((char)1 << 3)))
+													) {
+
+													// param5
+													if(params > 4) {
+														z5 = z4 + dist4_start;
+														x5 = z4 + dist4_end;
+														while(z5 < main_end && z5 <= x5 && array_words[z5]) {
+															if(
+																(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WORD_CASE))) 
+																  || array_words_case[z5] == find5_word) &&
+																(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WORD))) 
+																  || array_words[z5] == find5_word) &&
+																(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + LEMMA))) 
+																  || array_lemmas[z5] == find5_lemma) &&
+																(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + TAGS))) 
+																  || (list_tags_mask[array_tags[z5]] & ((char)1 << 4))) &&
+																(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WILD_CASE))) 
+																  || (list_wildmatch_case_mask[array_words_case[z5]] & ((char)1 << 4))) &&
+																(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 4 + WILD))) 
+																  || (list_wildmatch_mask[array_words[z5]] & ((char)1 << 4)))
+																) {
+
+																// param6
+																if(params > 5) {
+																	z6 = z5 + dist5_start;
+																	x6 = z5 + dist5_end;
+																	while(z6 < main_end && z6 <= x6 && array_words[z6]) {
+																		if(
+																			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WORD_CASE))) 
+																			  || array_words_case[z6] == find6_word) &&
+																			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WORD))) 
+																			  || array_words[z6] == find6_word) &&
+																			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + LEMMA))) 
+																			  || array_lemmas[z6] == find6_lemma) &&
+																			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + TAGS))) 
+																			  || (list_tags_mask[array_tags[z6]] & ((char)1 << 5))) &&
+																			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WILD_CASE))) 
+																			  || (list_wildmatch_case_mask[array_words_case[z6]] & ((char)1 << 5))) &&
+																			(!(search_types & ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * 5 + WILD))) 
+																			  || (list_wildmatch_mask[array_words[z6]] & ((char)1 << 5)))
+																			) {
+
+																			if(z1 > last_pos && found_limit) {
+																				sem_wait(&count_sem);
+																				if(found_limit) {
+																					--found_limit;
+																					sem_post(&count_sem);
+																					func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
+																					last_pos = z1;
+																				} else {
+																					sem_post(&count_sem);
+																				}
 																			}
-																		}
-																		++found_all;
-																	} 
-																	++z6;
-																}
-															} else {
-																if(z1 > last_pos && found_limit) {
-																	sem_wait(&count_sem);
-																	if(found_limit) {
-																		--found_limit;
-																		sem_post(&count_sem);
-																		func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
-																		last_pos = z1;
-																	} else {
-																		sem_post(&count_sem);
+																			++found_all;
+																		} 
+																		++z6;
 																	}
+																} else {
+																	if(z1 > last_pos && found_limit) {
+																		sem_wait(&count_sem);
+																		if(found_limit) {
+																			--found_limit;
+																			sem_post(&count_sem);
+																			func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
+																			last_pos = z1;
+																		} else {
+																			sem_post(&count_sem);
+																		}
+																	}
+																	++found_all;
 																}
-																++found_all;
-															}
-														} 
-														++z5;
-													}
-												} else {
-													if(z1 > last_pos && found_limit) {
-														sem_wait(&count_sem);
-														if(found_limit) {
-															--found_limit;
-															sem_post(&count_sem);
-															func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
-															last_pos = z1;
-														} else {
-															sem_post(&count_sem);
+															} 
+															++z5;
 														}
+													} else {
+														if(z1 > last_pos && found_limit) {
+															sem_wait(&count_sem);
+															if(found_limit) {
+																--found_limit;
+																sem_post(&count_sem);
+																func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
+																last_pos = z1;
+															} else {
+																sem_post(&count_sem);
+															}
+														}
+														++found_all;
 													}
-													++found_all;
+												}
+												++z4;
+											}
+										} else {
+											if(z1 > last_pos && found_limit) {
+												sem_wait(&count_sem);
+												if(found_limit) {
+													--found_limit;
+													sem_post(&count_sem);
+													func_build_sents(curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
+													last_pos = z1;
+												} else {
+													sem_post(&count_sem);
 												}
 											}
-											++z4;
+											++found_all;
 										}
+									}
+									++z3;
+								}
+							} else {
+								if(z1 > last_pos && found_limit) {
+									sem_wait(&count_sem);
+									if(found_limit) {
+										--found_limit;
+										sem_post(&count_sem);
+										func_build_sents(curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
+										last_pos = z1;
 									} else {
-										if(z1 > last_pos && found_limit) {
-											sem_wait(&count_sem);
-											if(found_limit) {
-												--found_limit;
-												sem_post(&count_sem);
-												func_build_sents(curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
-												last_pos = z1;
-											} else {
-												sem_post(&count_sem);
-											}
-										}
-										++found_all;
+										sem_post(&count_sem);
 									}
 								}
-								++z3;
+								++found_all;
 							}
+						}
+						++z2;
+					} 
+				} else {
+					if(z1 > last_pos && found_limit) {
+						sem_wait(&count_sem);
+						if(found_limit) {
+							--found_limit;
+							sem_post(&count_sem);
+							func_build_sents(curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
+							last_pos = z1;
 						} else {
-							if(z1 > last_pos && found_limit) {
-								sem_wait(&count_sem);
-								if(found_limit) {
-									--found_limit;
-									sem_post(&count_sem);
-									func_build_sents(curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
-									last_pos = z1;
-								} else {
-									sem_post(&count_sem);
-								}
-							}
-							++found_all;
+							sem_post(&count_sem);
 						}
 					}
-					++z2;
-				} 
-			} else {
-				if(z1 > last_pos && found_limit) {
-					sem_wait(&count_sem);
-					if(found_limit) {
-						--found_limit;
-						sem_post(&count_sem);
-						func_build_sents(curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
-						last_pos = z1;
-					} else {
-						sem_post(&count_sem);
-					}
+					++found_all;
 				}
-				++found_all;
 			}
+			++z1;
 		}
-		++z1;
-	}
-	thdata->last_pos = last_pos;
-	thdata->found_num = found_all;
-	pthread_exit(NULL);
+		thdata->last_pos = last_pos;
+		thdata->found_num = found_all;
+		//////////////////pthread_exit(NULL);
+
+
+
+
+
+
+
+
+
+	} // while(1)
+
+
+
+
+
 }
 
 
@@ -1449,6 +1506,54 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 		perror("Listen error");
 		exit(-1);
 	}
+
+
+
+
+
+
+
+
+
+	// Creating threads for the big cycle
+	printf("\n\nCreating threads...");
+	for(t = 0; t < SEARCH_THREADS; t++){
+		printf("\n  Thread: creating thread %d", t);
+		thread_data_array[t].id = t;
+
+		// Create worker thread
+		rc_thread[t] = pthread_create(&threads[t], NULL, (void *) &func_run_cycle, (void *) &thread_data_array[t]);
+		if(rc_thread[t]){
+			printf("\n  ERROR: return code from pthread_create() is %d", rc_thread[t]);
+			exit(-1);
+		}
+	}
+	/*
+	for(t = 0; t < SEARCH_THREADS; t++){
+		// wait for our thread to finish before continuing
+		rc_thread[t] = pthread_join(threads[t], NULL);
+		if(rc_thread[t]) {
+			printf("\n  ERROR; return code from pthread_join() is %d", rc_thread[t]);
+			exit(-1);
+		}
+		printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
+	}
+	printf("\n  Threads finished!");
+	printf("\nThreads func_run_cycle time: %ld milliseconds.\n", time_stop(&tv2));
+	*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 	while(1) {
 		if((cl = accept(fd, NULL, NULL)) == -1) {
 			perror("Accept error");
@@ -1517,6 +1622,24 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			}
 
 			time_start(&tv2);
+
+
+
+
+
+
+
+
+
+			///////////////////////////condition = 1;
+			///////////////////////////pthread_mutex_lock(&mutex);
+			///////////////////////////pthread_cond_signal(&cond);
+			///////////////////////////pthread_cond_broadcast(&cond);
+			///////////////////////////pthread_mutex_unlock(&mutex);
+
+
+
+			/*
 			// Creating threads for the big cycle
 			printf("\n\nCreating threads...");
 			for(t = 0; t < SEARCH_THREADS; t++){
@@ -1539,8 +1662,23 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 				}
 				printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
 			}
+			*/
 			printf("\n  Threads finished!");
 			printf("\nThreads func_run_cycle time: %ld milliseconds.\n", time_stop(&tv2));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 			// Summ amount of found occurences from all threads
 			size_array_found_sents_all_summ = 0;
