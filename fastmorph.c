@@ -178,6 +178,9 @@ unsigned int params;							/*   Number of tokens (1-5) to search: TODO: DELETE  
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond2 = PTHREAD_COND_INITIALIZER;
+
 int condition = 0;
 int finished = 0;
 
@@ -1270,12 +1273,12 @@ void * func_run_cycle(struct thread_data *thdata)
 		thdata->found_num = found_all;
 		//////////////////pthread_exit(NULL);
 
-
+		/*
 		pthread_mutex_lock(&mutex2);
 		finished++;
 		pthread_cond_broadcast(&cond2);
 		pthread_mutex_unlock(&mutex2);
-
+		*/
 
 
 
@@ -1640,10 +1643,10 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			///////////////////////////pthread_mutex_unlock(&mutex);
 
 			// wait for workers to finish
-			//pthread_mutex_lock(&mutex);
-			//while (finished != SEARCH_THREADS)
-			//	pthread_cond_wait(&cond, &mutex);
-			//pthread_mutex_unlock(&mutex);
+			//pthread_mutex_lock(&mutex2);
+			//while(finished != SEARCH_THREADS)
+			//	pthread_cond_wait(&cond2, &mutex2);
+			//pthread_mutex_unlock(&mutex2);
 
 
 
