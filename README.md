@@ -67,7 +67,7 @@ Query processing time: 1,704 sec.
 
 
 ## Using
-If you have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com] (tatcorpus@gmail.com).  
+If you have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com] (mailto:tatcorpus@gmail.com).  
 Also we ask you to let us know where this search engine is used and, if you don't mind, we will publish here links to those projects.
 
 
