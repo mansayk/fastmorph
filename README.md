@@ -1,4 +1,4 @@
-# fastmorph v5 (alpha)
+# fastmorph v5
 
 Fast corpus search engine originally made for the [Corpus of Written Tatar] (http://corpus.tatar/en) language.
 
@@ -6,9 +6,6 @@ You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
-**For the stable v4 see master branch!**
-
-<!---
 
 ## Features
 - Advanced search options based on any combination of different search parameters:
@@ -27,8 +24,9 @@ Source code is available at https://github.com/mansayk/fastmorph.
 * RAM: 16 Gb
 * OS: CentOS release 6.8 (Final)
 * fastmorph: compiled with 4 threads support, x64
-* Return full sentences with sources: 50
+* Return full sentences with sources: 100
 
+<!--
 ### Test results for different types of queries:
 ```
 Query:
@@ -39,7 +37,7 @@ Query processing time: 0,17 sec.
 ```
 Query:
    Word 1 (case sensitive, distance to the next word up to 3 words): Китап
-   Word 2 (if in brackets - lemma): (бир)
+   Word 2 (if in brackets, then it is lemma): (бир)
 Number of occurences: 15
 Query processing time: 0,121 sec.
 ```
@@ -53,24 +51,24 @@ Query:
 Number of occurences: 276778
 Query processing time: 1,704 sec.
 ```
-
+-->
 
 ## System Requirements
 - OS: tested on different Linux distributions.
-- RAM: about 2 Gb for the 100 mln word corpus.
+- RAM: about 800 Mb for the 100 mln word corpus.
 - CPU: multicore processors are recommended because of multithreading support.
 - MySQL: program loads all data from MySQL database.
 - UNIX Domain Socket support by OS.
 
 
-## Dependencies
+## Dependencies for compilation
 * [jsmn] (https://github.com/zserge/jsmn) is a minimalistic JSON parser in C.
 * MySQL C API is a C-based API that client applications written in C can use to communicate with MySQL Server.
 
 
 ## Using
 If you have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com] (tatcorpus@gmail.com).  
-Also we ask you to let us know where this search engine is used and, if you don't mind, we will publish links to those projects here.
+Also we ask you to let us know where this search engine is used and, if you don't mind, we will publish here links to those projects.
 
 
 ## License
@@ -80,13 +78,14 @@ This software is distributed under GNU General Public License v3.0.
 ## JSON
 Search query: 
 ```
-Schematical view: {<adj>}(0) 1-5 {ке*<n>}(1) 1-1 {(кил)}(0) 1-1 {}(0) 1-1 {}(0)  
+Schematical view: {<adj>}(0) 1-5 {ке*<n>}(1) 1-1 {(кил)}(0) 1-1 {}(0) 1-1 {}(0) 1-1 {}(0)  
 Detailed:  
-   Word 1 (distance range to the next word is from 1 to 5): <adj>  
-   Word 2 (case sensitive): ке*<n>  
-   Word 3: (кил)  
+   Word 1 (distance range to the next word is from 1 to 5, adjective): <adj>  
+   Word 2 (case sensitive, begins with "ке", noun): ке*<n>  
+   Word 3: (lemma "кил")  
    Word 4:  
-   Word 5:  
+   Word 5:
+   Word 6:  
 ```
 ### Input format
 ```
@@ -95,14 +94,16 @@ Detailed:
     "",  
     "",  
     "",  
-    "",  
+    "",
+    "",
     ""  
   ],  
   "lemma": [  
     "",  
     "",  
     "кил",  
-    "",  
+    "",
+    "",
     ""  
   ],  
   "tags": [  
@@ -110,47 +111,49 @@ Detailed:
     "<n>",  
     "",  
     "",  
+    "",
     ""  
   ],  
   "wildmatch": [  
     "",  
     "ке*",  
     "",  
-    "",  
+    "",
+    "",
     ""  
+  ],  
+  "case": [  
+    0,  
+    1,  
+    0, 
+    0,
+    0,
+    0  
   ],  
   "dist_from": [  
     1,  
     1,  
-    1,  
+    1, 
+    1,
     1  
   ],  
   "dist_to": [  
     5,  
     1,  
-    1,  
+    1,
+    1,
     1  
   ],  
-  "types": 4218888,  
-  "params": 3,  
+  "return": 100,  
   "last_pos": "0"  
 }  
 ```
-**"types"** is used as a set of bits according to these constants:  
-```
-#define WORD_CASE			0				/*   id of words (case sensitive)						*/
-#define WORD				1				/*   id of words								*/
-#define LEMMA				2				/*   id of lemmas								*/
-#define TAGS				3				/*   id of tags									*/
-#define WILD_CASE			4				/*   id of wild (case sensitive)						*/
-#define WILD				5				/*   id of wild									*/
-#define SEARCH_TYPES_OFFSET		10				/*   search_types -> 0-9, 10-19, 20-29, 30-39, 40-49 bits; 50-63 are free	*/
-```
-**"params"** is just an amount of words to search (1-5).  
+**"return"** - amount of sentences to return maximum.  
+**"last_pos"** - 0 for the first query and just return back this string to get next list of sentences.  
 
 **Warning!** You should normalize and verify input data before passing it to fastmorph:  
 - remove all not allowed symbols;
-- check string legths and so on.
+- check string legths, numbers correctness and so on.
 
 ### Output format
 ```
@@ -175,17 +178,17 @@ Detailed:
   "found_all": 1359  
 }  
 ```
-As you see, each word matching the search query is returned in the following HTML tags:  
+As you can see, each word matching the search query is returned in the following HTML tags:  
 ```
 <span id='found_word_0' class='found_word' title='(LEMMA) <TAG1><TAG2>'>FOUND_WORD</span>
 ```
-so, for example, you can use CSS for highlighting them...
+so, for example, you can use CSS for highlighting them.
 
 
 ## MySQL database format
 
 You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
-
+<!--
 mysql> select * from morph6_main_apertium limit 10;  
   
 | id | word_case | word   | lemma  | tags  | sentence | source |  
@@ -268,10 +271,10 @@ mysql> select * from sources where col1 > 300 limit 3;
 |  301 | "miras.belem.ru" (web-сайт)                                                                   | miras.belem.ru |
 |  302 | Абдулла Алиш. Куршеләр                                                                        | book           |
 |  303 | Дәүләт хакимияте һәм җирле үзидарә органнарының бердәм "Рәсми Татарстан" порталы (web-сайт)   | tatarstan.ru   |
-
+-->
 
 ## Apertium
-If you use [Apertium's] (http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output. (Script will be available soon.)  
+If you use [Apertium's] (http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output.  
 
 To use this converter you should:  
 1) Annotate your corpus using Apertium's tagger:  
@@ -301,21 +304,25 @@ In result you should get file, containing annotated sentences:
 And place it in the same directory with script.  
 3) Run the python script this way:  
 ```
-./tat-tagger_to_ntables_v6.23.py tatcorpus2.sentences.apertium.tagged.txt
+./tat-tagger_to_ntables_v6.24.py tatcorpus2.sentences.apertium.tagged.txt
 ```  
 It will take quite much time according to the size of your corpus.  
-4) If everything went well, you should get list of new files that you need to import to MySQL database:  
+4) If everything went well, you should get a list of new files that you need to import to MySQL database:  
 ```
 tatcorpus2.sentences.apertium.tagged.txt.lemmas.output.txt
 tatcorpus2.sentences.apertium.tagged.txt.main.output.txt
 tatcorpus2.sentences.apertium.tagged.txt.tags-uniq.output.txt.sorted.txt
 tatcorpus2.sentences.apertium.tagged.txt.tags.output.txt
+tatcorpus2.sentences.apertium.tagged.txt.united.output.txt
 tatcorpus2.sentences.apertium.tagged.txt.words.output.txt
-tatcorpus2.sentences.apertium.tagged.txt.words_case.output.txt        
+tatcorpus2.sentences.apertium.tagged.txt.words_case.output.txt
 ```  
 
 
 ## ChangeLog:
+
+...
+
 18.11.2016 - The 4th version of fastmorph corpus search engine is released. List of changes:
    - case sensitive search option was added;
    - the memory (RAM) usage by the search system is reduced twice;
@@ -336,4 +343,3 @@ Technical info: version 3 consumes about 4 Gb RAM for the same corpus.
 22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
 Technical info: version 1 consumes about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
 
--->
