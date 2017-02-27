@@ -203,21 +203,21 @@ so, for example, you can use CSS for highlighting them.
 ## MySQL database format
 
 You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
-<!--
+
 mysql> select * from morph6_main_apertium limit 10;  
   
-| id | word_case | word   | lemma  | tags  | sentence | source |  
-| ---: | -------: | -----: | -----: | ----: | -------: | -----: |  
-|  0 |     89304 | 137624 | 103580 | 11189 |        1 |      1 |  
-|  1 |    197781 | 390168 | 291788 |  6598 |        1 |      1 |  
-|  2 |        21 |     21 |     15 | 14861 |        1 |      1 |  
-|  3 |     82146 | 166720 | 121016 | 11029 |        1 |      1 |  
-|  4 |    134768 | 245422 | 177813 |  1870 |        1 |      1 |  
-|  5 |        19 |     19 |     13 | 11354 |        1 |      1 |  
-|  6 |    405188 | 852194 | 632380 |  2160 |        1 |      1 |  
-|  7 |    405343 | 857977 | 637594 | 14724 |        1 |      1 |  
-|  8 |        19 |     19 |     13 | 11354 |        1 |      1 |  
-|  9 |    451227 | 978676 | 717918 | 14608 |        1 |      1 |  
+| id | united  | sentence | source |  
+| -: | ------: | -------: | -----: |  
+|  0 | 1594501 |        1 |      1 |  
+|  1 |  761564 |        1 |      1 |  
+|  2 |  787834 |        1 |      1 |  
+|  3 | 1505641 |        1 |      1 |  
+|  4 |  420024 |        1 |      1 |  
+|  5 |  764201 |        1 |      1 |  
+|  6 | 1003674 |        1 |      1 |  
+|  7 | 1003851 |        1 |      1 |  
+|  8 |  764201 |        1 |      1 |  
+|  9 | 1057551 |        1 |      1 |  
   
 mysql> select * from morph6_words_case_apertium where id > 200000 limit 10;  
   
@@ -286,7 +286,7 @@ mysql> select * from sources where col1 > 300 limit 3;
 |  301 | "miras.belem.ru" (web-сайт)                                                                   | miras.belem.ru |
 |  302 | Абдулла Алиш. Куршеләр                                                                        | book           |
 |  303 | Дәүләт хакимияте һәм җирле үзидарә органнарының бердәм "Рәсми Татарстан" порталы (web-сайт)   | tatarstan.ru   |
--->
+
 
 ## Apertium
 If you use [Apertium's] (http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output.  
