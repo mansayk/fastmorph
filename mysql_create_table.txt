@@ -1,19 +1,16 @@
-######################  MORPH 6  ###########################################################################################
+######################  fastmorph v5  ###########################################################################################
 
 
 CREATE TABLE
     `morph6_main_apertium` (
         `id` INT(9) NOT NULL,
-        `word_case` INT(7) NOT NULL,
-        `word` INT(7) NOT NULL,
-        `lemma` INT(7) NOT NULL,
-        `tags` INT(5) NOT NULL,
+        `united` INT(7) UNSIGNED NOT NULL,
         `sentence` INT(8) NOT NULL,
         `source` INT(4) NOT NULL,
         PRIMARY KEY(`id`)
     ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
-LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.main.output.txt' INTO TABLE morph6_main_apertium CHARACTER SET UTF8 (id,word_case,word,lemma,tags,sentence,source);
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.main.output.txt' INTO TABLE morph6_main_apertium CHARACTER SET UTF8 (id,united,sentence,source);
 
 
 CREATE TABLE
@@ -40,7 +37,7 @@ LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.words.
 
 CREATE TABLE
     `morph6_lemmas_apertium` (
-        `id` INT(7) NOT NULL,
+        `id` INT(6) NOT NULL,
         `freq` INT(7) NOT NULL,
         `lemma` VARCHAR(255) NOT NULL,
         PRIMARY KEY(`id`)
@@ -69,6 +66,20 @@ CREATE TABLE
     ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
 LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.tags-uniq.output.txt.sorted.txt' INTO TABLE morph6_tags_uniq_apertium CHARACTER SET UTF8 (id,freq,tag);
+
+
+CREATE TABLE
+    `morph6_united_apertium` (
+        `id` INT(7) NOT NULL,
+        `freq` INT(7) NOT NULL,
+        `word_case` INT(7) NOT NULL,
+        `word` INT(7) NOT NULL,
+        `lemma` INT(6) NOT NULL,
+        `tags` INT(5) NOT NULL,
+        PRIMARY KEY(`id`)
+    ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA INFILE '/var/lib/mysql/tatcorpus2.sentences.apertium.tagged.txt.united.output.txt' INTO TABLE morph6_united_apertium CHARACTER SET UTF8 (id,freq,word_case,word,lemma,tags);
 
 
 ############################################################################################################################
