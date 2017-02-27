@@ -3,9 +3,9 @@
  * Version v5.3.3 - 2017.02.28
  *
  * "fastmorph" is a high speed search engine for text corpora:
- * - loads all preprocessed data from MySQL (MariaDB) into RAM;
- * - creates UNIX domain socket file as a server and waits for queries in JSON format;
- * - has multithreading support.
+ *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
+ *   - creates UNIX domain socket file as a server and waits for queries in JSON format;
+ *   - has multithreading support.
  *
  * Copyright (C) 2014-present Mansur Saykhunov <tatcorpus@gmail.com>
  * Acknowledgements:
