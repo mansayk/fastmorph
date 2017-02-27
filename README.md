@@ -26,32 +26,41 @@ Source code is available at https://github.com/mansayk/fastmorph.
 * fastmorph: compiled with 4 threads support, x64
 * Return full sentences with sources: 100
 
-<!--
+
 ### Test results for different types of queries:
 ```
 Query:
    Word 1: китап
 Number of occurences: 32209
-Query processing time: 0,17 sec. 
+Query processing time: 0,4 sec.
 ```
 ```
 Query:
    Word 1 (case sensitive, distance to the next word up to 3 words): Китап
    Word 2 (if in brackets, then it is lemma): (бир)
 Number of occurences: 15
-Query processing time: 0,121 sec.
+Query processing time: 0,4 sec.
 ```
 ```
-Query:
-   Word 1 (case sensitive, distance range to the next word is from 1 to 100): *ы
-   Word 2 (case sensitive, distance range to the next word is from 1 to 100): *а
-   Word 3 (case sensitive, distance range to the next word is from 1 to 100): *м
-   Word 4 (case sensitive, distance range to the next word is from 1 to 100): *с
-   Word 5 (case sensitive): *е
-Number of occurences: 276778
-Query processing time: 1,704 sec.
+Quite heavy query:
+   Word 1 (word begins with "б", distance range to the next word is from 1 to 10): б*
+   Word 2 (pronoun, word ends with "ң", distance range to the next word is from 1 to 10): <prn>*ң
+   Word 3 (lemma "кил", word ends with "р"): (кил)*р
+Number of occurences: 135210
+Query processing time: 0,8 sec.
 ```
--->
+```
+Very heavy query:
+   Word 1 (word ends with "ы", distance range to the next word is from 1 to 100): *ы
+   Word 2 (word ends with "а", distance range to the next word is from 1 to 100): *а
+   Word 3 (word ends with "м", distance range to the next word is from 1 to 100): *м
+   Word 4 (word ends with "с", distance range to the next word is from 1 to 100): *с
+   Word 5 (word ends with "ь", distance range to the next word is from 1 to 100): *ь
+   Word 6 (word ends with "е"): *е
+Number of occurences: 135210
+Query processing time: 1,4 sec.
+```
+
 
 ## System Requirements
 - OS: tested on different Linux distributions.
@@ -67,6 +76,8 @@ Query processing time: 1,704 sec.
 
 
 ## Using
+You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
+There are different search examples in our [manual] (http://corpus.tatar/manual/tatcorpus_instruction_eng.pdf).
 If you have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com] (mailto:tatcorpus@gmail.com).  
 Also we ask you to let us know where this search engine is used and, if you don't mind, we will publish here links to those projects.
 
@@ -82,11 +93,13 @@ Schematical view: {<adj>}(0) 1-5 {ке*<n>}(1) 1-1 {(кил)}(0) 1-1 {}(0) 1-1 {
 Detailed:  
    Word 1 (distance range to the next word is from 1 to 5, adjective): <adj>  
    Word 2 (case sensitive, begins with "ке", noun): ке*<n>  
-   Word 3: (lemma "кил")  
+   Word 3: (lemma "кил"):(кил)  
    Word 4:  
    Word 5:
    Word 6:  
 ```
+
+
 ### Input format
 ```
 {  
@@ -148,12 +161,13 @@ Detailed:
   "last_pos": "0"  
 }  
 ```
-**"return"** - amount of sentences to return maximum.  
-**"last_pos"** - 0 for the first query and just return back this string to get next list of sentences.  
+**"return"** - maximum amount of sentences to return.  
+**"last_pos"** - "0" for the first query or just return back this string to get the next list of sentences.  
 
 **Warning!** You should normalize and verify input data before passing it to fastmorph:  
 - remove all not allowed symbols;
 - check string legths, numbers correctness and so on.
+
 
 ### Output format
 ```
