@@ -24,6 +24,8 @@ Source code is available at https://github.com/mansayk/fastmorph.
 * RAM: 16 Gb
 * OS: CentOS release 6.8 (Final)
 * fastmorph: compiled with 4 threads support, x64
+
+* Corpus size: 116 mln word occurences (140 mln tokens)
 * Return full sentences with sources: 100
 
 
@@ -43,7 +45,7 @@ Query processing time: 0,4 sec.
 ```
 ```
 Quite heavy query:
-   Word 1 (word begins with "б", distance range to the next word is from 1 to 10): б*
+   Word 1 (word begins with "б" letter, distance range to the next word is from 1 to 10): б*
    Word 2 (pronoun, word ends with "ң", distance range to the next word is from 1 to 10): <prn>*ң
    Word 3 (lemma "кил", word ends with "р"): (кил)*р
 Number of occurences: 135210
@@ -63,9 +65,9 @@ Query processing time: 1,4 sec.
 
 
 ## System Requirements
-- OS: tested on different Linux distributions.
+- OS: tested on different Linux x86-64 distributions.
 - RAM: about 800 Mb for the 100 mln word corpus.
-- CPU: multicore processors are recommended because of multithreading support.
+- CPU: 64-bit multicore processors are recommended because of multithreading support.
 - MySQL: program loads all data from MySQL database.
 - UNIX Domain Socket support by OS.
 
@@ -77,7 +79,7 @@ Query processing time: 1,4 sec.
 
 ## Using
 You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
-There are different search examples in our [manual] (http://corpus.tatar/manual/tatcorpus_instruction_eng.pdf).
+There are different search examples in our [Corpus' manual] (http://corpus.tatar/manual/tatcorpus_instruction_eng.pdf).
 If you have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com] (mailto:tatcorpus@gmail.com).  
 Also we ask you to let us know where this search engine is used and, if you don't mind, we will publish here links to those projects.
 
@@ -95,7 +97,7 @@ Detailed:
    Word 2 (case sensitive, begins with "ке", noun): ке*<n>  
    Word 3: (lemma "кил"):(кил)  
    Word 4:  
-   Word 5:
+   Word 5:  
    Word 6:  
 ```
 
