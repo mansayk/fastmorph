@@ -458,10 +458,6 @@ for line in fr:
 			sys.exit("Couldn't find lemma in the array = " + str(current_lemma))
 			found_id_lemmas = -1
 
-
-
-
-
 		# united
 		found_id_united = -1
 		#current_united = current_united.lower()
@@ -487,18 +483,6 @@ for line in fr:
 		else:
 			array_united_combinations[1][found_id_united] += 1
 
-
-
-
-
-
-
-
-
-
-
-
-
 		#fw.write( str( counter_id_main ) + "\t" + str( found_id_words_case ) + "\t" + str( found_id_words ) + "\t" + str( found_id_lemmas ) + "\t" + str( found_id_tags ) + "\t" + str( counter_sentences ) + "\t" + str( source_id ) + "\n" )
 		counter_wordpos += 1
 		counter_id_main += 1
@@ -516,19 +500,6 @@ sys.stdout.flush()
 #fw.close()
 fr.close()
 print( "" )
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ######################################################################################################################
 #   3rd cycle
@@ -688,10 +659,6 @@ for line in fr:
 			sys.exit("Couldn't find lemma in the array = " + str(current_lemma))
 			found_id_lemmas = -1
 
-
-
-
-
 		# united
 		found_id_united = -1
 		#current_united = current_united.lower()
@@ -707,20 +674,7 @@ for line in fr:
 			sys.exit("Couldn't find 'united' in the array = " + str(current_united))
 			found_id_united = -1
 
-
-
-
-
-
-
 		fw.write( str( counter_id_main ) + "\t" + str( found_id_united ) + "\t" + str( counter_sentences ) + "\t" + str( source_id ) + "\n" )
-
-
-
-
-
-
-
 		#fw.write( str( counter_id_main ) + "\t" + str( found_id_words_case ) + "\t" + str( found_id_words ) + "\t" + str( found_id_lemmas ) + "\t" + str( found_id_tags ) + "\t" + str( counter_sentences ) + "\t" + str( source_id ) + "\n" )
 		counter_wordpos += 1
 		counter_id_main += 1
@@ -737,27 +691,6 @@ fw.flush()
 os.fsync( fw )
 fw.close()
 print( "" )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Write tags file
 #array_tag_combinations[0].pop( 0 ) # deleting fake empty string 
@@ -824,34 +757,18 @@ os.fsync( fw4 )
 fw4.close()
 print( "" )
 
-
-
-
-
-
-
-
-
-
 # Write united file
 #array_united_combinations[0].pop( 0 ) # deleting fake empty string 
 #array_united_combinations[1].pop( 0 ) # deleting fake empty string 
 size_list = len( array_united_combinations[0] )
 #for x in range( 0, size_list ):
 for x in range( 1, size_list ):
-	
-	
-	
 	current_united_word_case =	re.sub( r'^([1234567890]+)x([1234567890]+)x([1234567890]+)x([1234567890]+)$', r"\1", array_united_combinations[0][x] )
 	current_united_word =		re.sub( r'^([1234567890]+)x([1234567890]+)x([1234567890]+)x([1234567890]+)$', r"\2", array_united_combinations[0][x] )
 	current_united_lemma =		re.sub( r'^([1234567890]+)x([1234567890]+)x([1234567890]+)x([1234567890]+)$', r"\3", array_united_combinations[0][x] )
 	current_united_tags =		re.sub( r'^([1234567890]+)x([1234567890]+)x([1234567890]+)x([1234567890]+)$', r"\4", array_united_combinations[0][x] )
 	
-	
-	
 	fw7.write( str( x ) + "\t" + str( array_united_combinations[1][x] ) + "\t"            + current_united_word_case + "\t" + current_united_word + "\t" + current_united_lemma + "\t" + current_united_tags              + '\n' )
-	
-	
 	#fw7.write( str( x ) + "\t" + str( array_united_combinations[1][x] ) + "\t" + array_united_combinations[0][x] + '\n' )
 	sys.stdout.write("\r  Writing united file... %d lines" % x)
 	sys.stdout.flush()
@@ -859,18 +776,6 @@ fw7.flush()
 os.fsync( fw7 )
 fw7.close()
 print( "" )
-
-
-
-
-
-
-
-
-
-
-
-
 
 #
 # Sorting tags_uniq file

@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.3.1 - 2017.02.27
+ * Version v5.3.3 - 2017.02.28
  *
  * "fastmorph" is a high speed search engine for text corpora:
  * - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -37,34 +37,35 @@
  *
  **************************************************************************************/
 
-#define VERSION				"Version v5.3.1 - 2017.02.27"			/*   Version and date								*/
-#define DEBUG				0						/*   Output additional debugging info						*/
+#define VERSION				"Version v5.3.3 - 2017.02.28"		/*   Version and date								*/
+#define DEBUG				0					/*   Output additional debugging info						*/
 
-#define WORD				0						/*   id of words								*/
-#define LEMMA				1						/*   id of lemmas								*/
-#define TAGS				2						/*   id of tags									*/
-#define WILD				3						/*   id of wild									*/
-#define SEARCH_TYPES_OFFSET		8						/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
-#define SOURCES_ARRAY_SIZE		2750						/*   Size of sources arrays							*/
-#define AMOUNT_SENTENCES		10015946					/*   Amount of sentences							*/
-//#define AMOUNT_SENTENCES		64900						/*   Amount of sentences	TEST						*/
-#define SIZE_ARRAY_MAIN			(139991551 + SOURCES_ARRAY_SIZE)		/*   Size of array_main								*/
-//#define SIZE_ARRAY_MAIN		(1000000 + SOURCES_ARRAY_SIZE)			/*   Size of array_main		TEST						*/
-#define TAGS_ARRAY_SIZE			14864						/*   Size of tags combinations array						*/
-#define TAGS_UNIQ_BUFFER_SIZE		32						/*   Length of buffer for uniq tags 						*/
-#define TAGS_UNIQ_ARRAY_SIZE		134						/*   Amount of uniq tags	 						*/
-#define WORDS_BUFFER_SIZE		256						/*   Buffer size for words (strings)						*/
-#define WORDS_ARRAY_SIZE		1353045						/*   Size of words array							*/
-#define WORDS_CASE_ARRAY_SIZE		1590290						/*   Size of words (case sensitive)						*/
-#define LEMMAS_ARRAY_SIZE		963291						/*   Size of lemmas array							*/
-#define UNITED_ARRAY_SIZE		1726045						/*   Size of united array							*/
-#define SOURCE_TYPES_BUFFER_SIZE	32						/*   Length of buffer for source types (book, www...ru)				*/
-#define MYSQL_LOAD_LIMIT		100000						/*   Portions to load from MySQL: SELECT ... LIMIT 100000			*/
-#define FOUND_SENTENCES_LIMIT_DEFAULT	100						/*   Amount of found sentences to collect					*/
-#define SOURCE_BUFFER_SIZE		10240						/*   Buffer for found sentences							*/
-#define SOCKET_BUFFER_SIZE		10240						/*   Size of input and output buffers for socket				*/
-#define SEARCH_THREADS			4						/*   Threads count to perform search: depends on CPU cores			*/
-#define AMOUNT_TOKENS			6						/*   Max amount of words to search						*/
+#define WORD				0					/*   id of words								*/
+#define LEMMA				1					/*   id of lemmas								*/
+#define TAGS				2					/*   id of tags									*/
+#define WILD				3					/*   id of wild									*/
+#define SEARCH_TYPES_OFFSET		8					/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
+#define SOURCES_ARRAY_SIZE		2750					/*   Size of sources arrays							*/
+#define AMOUNT_SENTENCES		10015946				/*   Amount of sentences							*/
+//#define AMOUNT_SENTENCES		64900					/*   Amount of sentences	TEST						*/
+#define SIZE_ARRAY_MAIN			(139991551 + SOURCES_ARRAY_SIZE)	/*   Size of array_main								*/
+//#define SIZE_ARRAY_MAIN		(1000000 + SOURCES_ARRAY_SIZE)		/*   Size of array_main		TEST						*/
+#define TAGS_ARRAY_SIZE			14864					/*   Size of tags combinations array						*/
+#define TAGS_UNIQ_BUFFER_SIZE		32					/*   Length of buffer for uniq tags 						*/
+#define TAGS_UNIQ_ARRAY_SIZE		134					/*   Amount of uniq tags	 						*/
+#define WORDS_BUFFER_SIZE		256					/*   Buffer size for words (strings)						*/
+#define WORDS_ARRAY_SIZE		1353045					/*   Size of words array							*/
+#define WORDS_CASE_ARRAY_SIZE		1590290					/*   Size of words (case sensitive)						*/
+#define LEMMAS_ARRAY_SIZE		963291					/*   Size of lemmas array							*/
+#define UNITED_ARRAY_SIZE		1726045					/*   Size of united array							*/
+#define SOURCE_TYPES_BUFFER_SIZE	64					/*   Length of buffer for source types (book, www...ru)				*/
+#define SOURCE_OFFSET			-2000000000				/*   Offset for the source value in the main array to differ it from sent begin */
+#define MYSQL_LOAD_LIMIT		100000					/*   Portions to load from MySQL: SELECT ... LIMIT 100000			*/
+#define FOUND_SENTENCES_LIMIT_DEFAULT	100					/*   Amount of found sentences to collect					*/
+#define SOURCE_BUFFER_SIZE		10240					/*   Buffer for found sentences							*/
+#define SOCKET_BUFFER_SIZE		10240					/*   Size of input and output buffers for socket				*/
+#define SEARCH_THREADS			4					/*   Threads count to perform search: depends on CPU cores			*/
+#define AMOUNT_TOKENS			6					/*   Max amount of words to search						*/
 
 // HTML tags for highlighting found words
 #define FOUND_HTML_OPEN			"<span id='found_word_%d' class='found_word' title='(%s) %s'>"	/*   id, lemma, tags				*/
@@ -722,7 +723,7 @@ int func_read_mysql()
 							fprintf(stderr, "\nNo digits were found");
 
 						if(source_last != source_curnt) {
-							array_united[i] = INT_MIN; // TODO: text beginning marker ( < 2000000000) and subcorpora mask
+							array_united[i] = INT_MIN; // TODO: text beginning marker ( < SOURCE_OFFSET) and subcorpora mask
 							++i;
 							source_last = source_curnt;
 						}
@@ -782,12 +783,12 @@ int func_find_distances_for_threads()
 		if(x == 0) {
 			thread_data_array[x].start = 0;
 		} else {
-			thread_data_array[x].start = (thread_data_array[x-1].finish + 1);
+			thread_data_array[x].start = thread_data_array[x-1].finish + 1;
 		}
 		if(x == SEARCH_THREADS - 1) {
 			thread_data_array[x].finish = SIZE_ARRAY_MAIN - 1;
 		} else {
-			while(array_united[thread_data_array[x].finish] > -2000000000) { // -( 2 billions + source id )
+			while(array_united[thread_data_array[x].finish] > SOURCE_OFFSET) {
 				++thread_data_array[x].finish;
 			}
 			--thread_data_array[x].finish;
@@ -797,7 +798,7 @@ int func_find_distances_for_threads()
 		thread_data_array[x].first_sentence = sentence;
 		y = thread_data_array[x].start;
 		while(y <= thread_data_array[x].finish) {
-			if(array_united[y] < 0 ) {
+			if(array_united[y] > SOURCE_OFFSET && array_united[y] < 0) {
 				++sentence;
 			}
 			++y;
@@ -1052,7 +1053,7 @@ void * func_run_cycle(struct thread_data *thdata)
 			positive = array_united[z1];
 			if(positive < 0) {
 				// TODO: it will be id of source_mask to check if this text is selected (subcorpora)
-				if(positive <= -2000000000) // 2 billions
+				if(positive <= SOURCE_OFFSET)
 					positive = -array_united[++z1];
 				else  
 					positive = -positive;
@@ -1407,14 +1408,6 @@ int func_fill_search_mask()
 	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0])) {
 		++params;
 	}
-	/*
-	for(unsigned int x = 0; x < AMOUNT_TOKENS; x++) {
-		if(word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0])
-			++params;
-		else
-			break;
-	}
-	*/
 
 	if(DEBUG)
 		printf("\nparams: %d", params);
