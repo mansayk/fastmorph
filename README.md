@@ -24,7 +24,6 @@ Source code is available at https://github.com/mansayk/fastmorph.
 * RAM: 16 Gb
 * OS: CentOS release 6.8 (Final)
 * fastmorph: compiled with 4 threads support, x64
-  
 * Corpus size: 116 mln word occurences (140 mln tokens)
 * Return full sentences with sources: 100
 
