@@ -220,6 +220,7 @@ mysql> select * from morph6_main_apertium limit 10;
 |  9 | 1057551 |        1 |      1 |  
   
 mysql> select * from morph6_united_apertium where id >= 100 limit 10;  
+  
 | id  | freq | word_case | word   | lemma  | tags |  
 | --: | ---: | --------: | -----: | -----: | ---: |  
 | 100 |    1 |   1000084 | 599888 | 429156 |    2 |  
