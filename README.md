@@ -336,7 +336,7 @@ tatcorpus2.sentences.apertium.tagged.txt.words_case.output.txt
 
 ## ChangeLog:
 
-...
+27.02.2017 - The 5th version of fastmorph corpus search engine is released. Now it consumes about 2,5 times less memory (RAM).
 
 18.11.2016 - The 4th version of fastmorph corpus search engine is released. List of changes:
    - case sensitive search option was added;
