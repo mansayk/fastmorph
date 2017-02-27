@@ -207,7 +207,7 @@ You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/
 mysql> select * from morph6_main_apertium limit 10;  
   
 | id | united  | sentence | source |  
-| -: | ------: | -------: | -----: |  
+| --: | ------: | -------: | -----: |  
 |  0 | 1594501 |        1 |      1 |  
 |  1 |  761564 |        1 |      1 |  
 |  2 |  787834 |        1 |      1 |  
