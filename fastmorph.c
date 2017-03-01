@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.3.3 - 2017.02.28
+ * Version v5.3.4 - 2017.03.01
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -37,7 +37,7 @@
  *
  **************************************************************************************/
 
-#define VERSION				"Version v5.3.3 - 2017.02.28"		/*   Version and date								*/
+#define VERSION				"Version v5.3.4 - 2017.03.01"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
 #define WORD				0					/*   id of words								*/
@@ -871,6 +871,7 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 	unsigned long long z[] = {z1, z2, z3, z4, z5, z6};
 	int lspace = 1;
 	int rspace = 1;
+	int quote_open = 0;
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
 
@@ -905,14 +906,13 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 	strncat(bufout, "\"sentence\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	y = 0;
 	do { 
+		// Punctuation and whitespaces
 		rspace = 1;
 		switch(united_words_case[abs(array_united[sent_begin])][0]) {
 			case '(':
 			case '[':
 			case '{':
 			case '`':
-			//case '«':
-			//case '"':
 				rspace = 0;
 		}
 		switch(united_words_case[abs(array_united[sent_begin])][0]) {
@@ -927,10 +927,24 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 			case '}':
 			case '%':
 			case '`':
-			//case '»':
-			//case '"':
 				lspace = 0;
 		}
+
+		// Quote ( " )
+		if(united_words_case[abs(array_united[sent_begin])][0] == '"') {
+			if(quote_open)
+				lspace = 0;
+			else
+				rspace = 0;
+			quote_open = !quote_open;
+		}
+
+		// Quotes ( « » ) !!! NOT TESTED !!!
+		if(!strncmp(united_words_case[abs(array_united[sent_begin])], "«", 2))
+			rspace = 0;
+		else if(!strncmp(united_words_case[abs(array_united[sent_begin])], "»", 2))
+			lspace = 0;
+
 		if(lspace)
 			strncat(bufout, " ", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 		if(z[y] == sent_begin) { 
