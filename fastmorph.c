@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.3.4 - 2017.03.01
+ * Version v5.3.5 - 2017.03.02
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -37,7 +37,7 @@
  *
  **************************************************************************************/
 
-#define VERSION				"Version v5.3.4 - 2017.03.01"		/*   Version and date								*/
+#define VERSION				"Version v5.3.5 - 2017.03.02"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
 #define WORD				0					/*   id of words								*/
@@ -912,6 +912,39 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 			case '(':
 			case '[':
 			case '{':
+				rspace = 0;
+				break;
+			case '.':
+			case '!':
+			case '?':
+			case ',':
+			case ':':
+			case ';':
+			case ')':
+			case ']':
+			case '}':
+			case '%':
+				lspace = 0;
+				break;
+			case '`':
+				rspace = 0;
+				lspace = 0;
+				break;
+			case '"':
+				if(quote_open)
+					lspace = 0;
+				else
+					rspace = 0;
+				quote_open = !quote_open;
+				break;
+		}
+
+		/*
+		rspace = 1;
+		switch(united_words_case[abs(array_united[sent_begin])][0]) {
+			case '(':
+			case '[':
+			case '{':
 			case '`':
 				rspace = 0;
 		}
@@ -938,8 +971,9 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 				rspace = 0;
 			quote_open = !quote_open;
 		}
+		*/
 
-		// Quotes ( « » ) !!! NOT TESTED !!!
+		// 2-byte quotes ( « » ) !!! NOT TESTED !!!
 		if(!strncmp(united_words_case[abs(array_united[sent_begin])], "«", 2))
 			rspace = 0;
 		else if(!strncmp(united_words_case[abs(array_united[sent_begin])], "»", 2))
