@@ -2,7 +2,7 @@
 
 Fast corpus search engine originally made for the [Corpus of Written Tatar](http://corpus.tatar/en) language.
 
-You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
+You can try it [here](http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
 
 Source code is available at https://github.com/mansayk/fastmorph.
 
@@ -72,14 +72,14 @@ Query processing time: 1,4 sec.
 
 
 ## Dependencies for compilation
-* [jsmn] (https://github.com/zserge/jsmn) is a minimalistic JSON parser in C.
+* [jsmn](https://github.com/zserge/jsmn) is a minimalistic JSON parser in C.
 * MySQL C API is a C-based API that client applications written in C can use to communicate with MySQL Server.
 
 
 ## Using
-You can try it [here] (http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
-There are different search examples in our [Corpus' manual] (http://corpus.tatar/manual/tatcorpus_instruction_eng.pdf).
-If you have any questions about using [fastmorph] (https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com] (mailto:tatcorpus@gmail.com).  
+You can try it [here](http://corpus.tatar/index_en.php?openinframe=search/index_en.html).
+There are different search examples in our [Corpus' manual](http://corpus.tatar/manual/tatcorpus_instruction_eng.pdf).
+If you have any questions about using [fastmorph](https://github.com/mansayk/fastmorph) in your projects, please contact us by [tatcorpus@gmail.com](mailto:tatcorpus@gmail.com).  
 Also we ask you to let us know where this search engine is used and, if you don't mind, we will publish here links to those projects.
 
 
@@ -202,7 +202,7 @@ so, for example, you can use CSS for highlighting them.
 
 ## MySQL database format
 
-You can find CREATE TABLE examples [here] (https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
+You can find CREATE TABLE examples [here](https://github.com/mansayk/fastmorph/blob/master/mysql_create_table.txt).
 
 mysql> select * from morph6_main_apertium limit 10;  
   
@@ -304,14 +304,14 @@ mysql> select * from sources where col1 > 300 limit 3;
 
 
 ## Apertium
-If you use [Apertium's] (http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output.  
+If you use [Apertium's](http://wiki.apertium.org/wiki/Publications) tagger to morphologically annotate the corpus, then you can use our Python script to generate tables from Apertium's output.  
 
 To use this converter you should:  
 1) Annotate your corpus using Apertium's tagger:  
 ```
 cat bigfile.txt | apertium -n -d . tat-tagger | cg-proc dev/mansur.bin > bigfile_tagged.txt
 ```
-where **mansur.bin** is just a file with some additional rules. You can find it [here] (https://svn.code.sf.net/p/apertium/svn/languages/apertium-tat/dev/).  
+where **mansur.bin** is just a file with some additional rules. You can find it [here](https://svn.code.sf.net/p/apertium/svn/languages/apertium-tat/dev/).  
 In result you should get file, containing annotated sentences:  
 ```
 ^Мин/Мин<prn><pers><p1><sg><nom>$ ^үземне/үз<prn><ref><px1sg><acc>$ ^белә/бел<v><tv><prc_impf>$ ^башлаганнан/башла<vaux><ger_past><abl>$ ^бирле/бирле<post>$ ^түбән/түбән<adj>$ ^очка/оч<n><sg><dat>$ – ^ерак/ерак<adj>$ ^бабакайларга/бабакай<n><pl><dat>$ ^төшәргә/төш<v><iv><inf>$ ^ярата/ярат<v><tv><pres><p3><sg>$ ^идем/и<cop><ifi><p1><sg>$^./.<sent>$
@@ -368,7 +368,7 @@ Technical info: version 3 consumes about 4 Gb RAM for the same corpus.
 
 21.04.2016 - Because of implementation in "fastmorph" module some processor optimizations and multithreading support we achieved that complex morphological search now performs up to five times faster.
 
-03.04.2016 - Complex morphological search system's features were significantly extended. You can get more info about them in [The Guides] (http://corpus.tatar/manual_en.htm) updated up to 3.0 and higher version.
+03.04.2016 - Complex morphological search system's features were significantly extended. You can get more info about them in [The Guides](http://corpus.tatar/manual_en.htm) updated up to 3.0 and higher version.
 
 22.02.2016 - Complex morphological search function appeared in The Corpus of Written Tatar, where you can use different combinations of such parameters as wordform, lemma, grammatical tags, beginning and end of words, distances between them.
 Technical info: version 1 consumes about 6 Gb RAM for the corpus, consisting of 116 mln word occurences. Its speed is quite high.
