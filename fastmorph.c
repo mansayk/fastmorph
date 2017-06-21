@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.3.5 - 2017.03.02
+ * Version v5.3.6 - 2017.06.21
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -37,7 +37,7 @@
  *
  **************************************************************************************/
 
-#define VERSION				"Version v5.3.5 - 2017.03.02"		/*   Version and date								*/
+#define VERSION				"Version v5.3.6 - 2017.06.21"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
 #define WORD				0					/*   id of words								*/
@@ -67,12 +67,13 @@
 #define SEARCH_THREADS			4					/*   Threads count to perform search: depends on CPU cores			*/
 #define AMOUNT_TOKENS			6					/*   Max amount of words to search						*/
 
-// HTML tags for highlighting found words
-#define FOUND_HTML_OPEN			"<span id='found_word_%d' class='found_word' title='(%s) %s'>"	/*   id, lemma, tags				*/
-#define FOUND_HTML_CLOSE		"</span>"
+// HTML tags for highlighting words
+#define FOUND_HTML_OPEN		"<span id='found_word_%d' class='found_word' title='(%s%s) %s'>"	/*   escaping '\' if lemma is '"', lemma utself, tag	*/
+#define REGULAR_HTML_OPEN	"<span title='(%s%s) %s'>"						/*   escaping '\' if lemma is '"', lemma utself, tags	*/
+#define HTML_CLOSE		"</span>"
 
 // Path to socket file
-#define UNIX_DOMAIN_SOCKET		"/tmp/fastmorph.socket"
+#define UNIX_DOMAIN_SOCKET	"/tmp/fastmorph.socket"
 
 /**************************************************************************************
  *
@@ -152,6 +153,7 @@ struct thread_data {							/*   Structure to communicate with threads   */
 	unsigned long long last_pos;
 	unsigned int found_num;
 	unsigned int first_sentence;
+	unsigned int progress;
 };
 struct thread_data thread_data_array[SEARCH_THREADS];
 
@@ -939,40 +941,6 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 				break;
 		}
 
-		/*
-		rspace = 1;
-		switch(united_words_case[abs(array_united[sent_begin])][0]) {
-			case '(':
-			case '[':
-			case '{':
-			case '`':
-				rspace = 0;
-		}
-		switch(united_words_case[abs(array_united[sent_begin])][0]) {
-			case '.':
-			case '!':
-			case '?':
-			case ',':
-			case ':':
-			case ';':
-			case ')':
-			case ']':
-			case '}':
-			case '%':
-			case '`':
-				lspace = 0;
-		}
-
-		// Quote ( " )
-		if(united_words_case[abs(array_united[sent_begin])][0] == '"') {
-			if(quote_open)
-				lspace = 0;
-			else
-				rspace = 0;
-			quote_open = !quote_open;
-		}
-		*/
-
 		// 2-byte quotes ( « » ) !!! NOT TESTED !!!
 		if(!strncmp(united_words_case[abs(array_united[sent_begin])], "«", 2))
 			rspace = 0;
@@ -981,18 +949,34 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 
 		if(lspace)
 			strncat(bufout, " ", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+
+		// html tag open
 		if(z[y] == sent_begin) { 
-			// lemma + tags
-			snprintf(temp, SOCKET_BUFFER_SIZE, FOUND_HTML_OPEN, y, united_lemmas[abs(array_united[z[y]])], united_tags[abs(array_united[z[y]])]);
-			strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+			// found: lemma + tags
+			if(united_lemmas[abs(array_united[sent_begin])][0] == '"') // if lemma is '"'
+				snprintf(temp, SOCKET_BUFFER_SIZE, FOUND_HTML_OPEN, y, "\\", united_lemmas[abs(array_united[z[y]])], united_tags[abs(array_united[z[y]])]);
+			else
+				snprintf(temp, SOCKET_BUFFER_SIZE, FOUND_HTML_OPEN, y, "", united_lemmas[abs(array_united[z[y]])], united_tags[abs(array_united[z[y]])]);
+			y++;
+		} else {
+			// regular: lemma + tags
+			if(united_lemmas[abs(array_united[sent_begin])][0] == '"') // if lemma is '"'
+				snprintf(temp, SOCKET_BUFFER_SIZE, REGULAR_HTML_OPEN, "\\", united_lemmas[abs(array_united[sent_begin])], united_tags[abs(array_united[sent_begin])]);
+			else
+				snprintf(temp, SOCKET_BUFFER_SIZE, REGULAR_HTML_OPEN, "", united_lemmas[abs(array_united[sent_begin])], united_tags[abs(array_united[sent_begin])]);
 		}
+		strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+
+		// escape if word is '"'
 		if(united_words_case[abs(array_united[sent_begin])][0] == '"')
 			strncat(bufout, "\\", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+
+		// word itself
 		strncat(bufout, united_words_case[abs(array_united[sent_begin])], SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-		if(z[y] == sent_begin) {
-			strncat(bufout, FOUND_HTML_CLOSE, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-			y++;
-		}
+
+		// html tag close
+		strncat(bufout, HTML_CLOSE, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+
 		if(!rspace)
 			lspace = rspace;
 		else
@@ -1061,6 +1045,7 @@ void * func_run_cycle(struct thread_data *thdata)
 	unsigned long long x6;
 
 	register int positive;
+	unsigned int progress;
 	unsigned int found_all;
 	unsigned long long sent_begin = 0;
 	register unsigned int curnt_sent;
@@ -1091,6 +1076,7 @@ void * func_run_cycle(struct thread_data *thdata)
 		dist5_start = dist_from[4];
 		dist5_end = dist_to[4];
 
+		progress = 0;
 		found_all = 0;
 		z1 = main_begin;
 		last_pos = thdata->last_pos;
@@ -1151,6 +1137,9 @@ void * func_run_cycle(struct thread_data *thdata)
 																				}
 																			}
 																			++found_all;
+																			if(z1 == last_pos) {
+																				progress = found_all;
+																			}
 																		} 
 																		++z6;
 																	}
@@ -1167,6 +1156,9 @@ void * func_run_cycle(struct thread_data *thdata)
 																		}
 																	}
 																	++found_all;
+																	if(z1 == last_pos) {
+																		progress = found_all;
+																	}
 																}
 															} 
 															++z5;
@@ -1184,6 +1176,9 @@ void * func_run_cycle(struct thread_data *thdata)
 															}
 														}
 														++found_all;
+														if(z1 == last_pos) {
+															progress = found_all;
+														}
 													}
 												}
 												++z4;
@@ -1201,6 +1196,9 @@ void * func_run_cycle(struct thread_data *thdata)
 												}
 											}
 											++found_all;
+											if(z1 == last_pos) {
+												progress = found_all;
+											}
 										}
 									}
 									++z3;
@@ -1218,6 +1216,9 @@ void * func_run_cycle(struct thread_data *thdata)
 									}
 								}
 								++found_all;
+								if(z1 == last_pos) {
+									progress = found_all;
+								}
 							}
 						}
 						++z2;
@@ -1235,12 +1236,16 @@ void * func_run_cycle(struct thread_data *thdata)
 						}
 					}
 					++found_all;
+					if(z1 == last_pos) {
+						progress = found_all;
+					}
 				}
 			}
 			++z1;
 		}
 		thdata->last_pos = last_pos;
 		thdata->found_num = found_all;
+		thdata->progress = progress;
 
 		// Decrementing counter and sending signal to func_run_socket()
 		pthread_mutex_lock(&mutex2);
@@ -1526,6 +1531,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 	pthread_t threads[SEARCH_THREADS]; // thread identifier
 	int rc_thread_united[SEARCH_THREADS];
 	pthread_t threads_united[SEARCH_THREADS]; // thread identifier
+	unsigned int progress; // The position of last returned sentence in 'found_all'
 
 	if((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
 		perror("Socket error");
@@ -1595,7 +1601,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			func_parse_last_pos();
 			func_validate_distances();
 
-			// Set the initial value of counter
+			// Set the initial value of counters
 			found_limit = return_sentences;
 			
 			time_start(&tv2);
@@ -1652,9 +1658,11 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			pthread_mutex_unlock(&mutex2);
 			printf("\nThreads func_run_cycle time: %ld milliseconds.", time_stop(&tv4));
 
-			// Summ amount of found occurences from all threads
+			// Summ amount of found occurences and left ones from all threads
+			progress = 0;
 			size_array_found_sents_all_summ = 0;
 			for(t = 0; t < SEARCH_THREADS; t++) {
+				progress += thread_data_array[t].progress;
 				size_array_found_sents_all_summ += thread_data_array[t].found_num;
 			}
 
@@ -1676,6 +1684,11 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			// found_all
 			strncat(bufout, ",\"found_all\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 			snprintf(temp, 100, "%d", size_array_found_sents_all_summ);
+			strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+
+			// progress
+			strncat(bufout, ",\"progress\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+			snprintf(temp, 100, "%d", progress);
 			strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
 			// close JSON string
