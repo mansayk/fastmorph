@@ -154,8 +154,9 @@ int main(int argc, char *argv[])
 
   if(printAsTree)
     fr.PrintTree(0,true);
-  else
+  else{
     fr.PrintNode("");
-  
+    cout<<"#Next free id:"<<generateNodeId()<<endl;
+  }
   return {};
 }
