@@ -61,8 +61,9 @@ void SFrase::PrintNode(string x){
   if(id!=-1)//a zero id is root of tree and should not be printed
     x+=to_string(id)+'('+to_string(count)+')';
   if(!lwords.empty()){
+    if(id!=-1) x+=' ';
     for(auto  it=lwords.begin();it!=lwords.end();it++){
-      it->second->PrintNode(x+' ');
+      it->second->PrintNode(x);
     }
   }else
     cout<<x<<endl;
@@ -156,11 +157,11 @@ int main(int argc, char *argv[])
   }
   AddInfo2tree(sug);
 
-  if(printAsTree)
+  if(printAsTree){
     fr.PrintTree(0,true);
-  else{
-    fr.PrintNode("");
     cout<<"#Next free id:"<<generateNodeId()<<endl;
-  }
+  }else
+    fr.PrintNode("");
+
   return {};
 }
