@@ -1,6 +1,10 @@
 /*
-parse.cpp 
-input: <word id>,<suggestion id>
+parse.cpp
+Stdin input: <word id>,<suggestion id>
+Example: awk '{print $2 "," $3}' tatcorpus2.sentences.apertium.tagged.txt.main.output.txt | ./parse -s 100 -e 150 > out.txt
+Params:
+    -s	First number in the range of the first word ids. If omitted, then from 0. For example, "_10_ 4 53 34 66 1" (10 is between 100 and 150 here.)
+    -e	Last number in the range of the first word ids. If omitted, then till the last one. For example, "_10_ 4 53 34 66 1" (10 is between 100 and 150 here.)
 */
 
 #include<iostream>
