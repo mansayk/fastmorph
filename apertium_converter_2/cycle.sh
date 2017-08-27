@@ -21,7 +21,8 @@ for i in `seq $begin $step $max`; do
 	else
 		m=i+step-1
 	fi
-	awk '{print $2 "," $3}' $1 | ./parse -s $i -e $m > $1.ngrams.$i-$m.txt
+	#awk '{print $2 "," $3}' $1 | ./parse -s $i -e $m > $1.ngrams.$i-$m.txt
+	awk '{print $2 "," $3}' $1 | ./parse -s $i -e $m | sed '/^ *$/d' >> $1.ngrams.txt
 	#echo $i $m $max
 done    
 
