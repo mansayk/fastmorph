@@ -1,6 +1,6 @@
 #/bin/bash
 
-declare -i value=0	# Begin from
+declare -i begin=0	# Begin from
 declare -i step=100000	# Increment by
 declare -i max=2000000	# Amount of possible word forms
 declare -i m=0
@@ -8,14 +8,14 @@ declare -i m=0
 max=max-step
 
 if [ "$1" == "" ] ; then
-	echo "Usage: script file.txt"
+	echo "Usage: script <file.txt>"
 	exit 1
 elif [ ! -f "$1" ] ; then
 	echo "File '$1' not found!"
 	exit 1
 fi
 
-for i in `seq $value $step $max`; do
+for i in `seq $begin $step $max`; do
 	if [ $i -eq $max ] ; then
 		m=i+step
 	else
