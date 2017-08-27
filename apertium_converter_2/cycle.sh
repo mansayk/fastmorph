@@ -3,7 +3,10 @@
 declare -i begin=0	# Begin from
 declare -i step=100000	# Increment by
 declare -i max=2000000	# Amount of possible word forms
+declare -i x=1		# Should not be 0
 declare -i m=0
+
+mode="tree" # tree, row
 
 max=max-step
 output="$1.ngrams.txt"
@@ -27,8 +30,20 @@ for i in `seq $begin $step $max`; do
 	else
 		m=i+step-1
 	fi
+
+	if [ "$mode" == "tree" ] && [ -f "$output" ] ; then
+		x=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
+	fi
+
+	echo "NEXT: $x"
+	#Next free id:1
 	#awk '{print $2 "," $3}' $1 | ./parse -s $i -e $m > $1.ngrams.$i-$m.txt
-	awk '{print $2 "," $3}' "$1" | ./parse -s $i -e $m | sed '/^ *$/d' >> "$output"
+	#awk '{print $2 "," $3}' "$1" | ./parse -q -i $x -s $i -e $m >> "$output"
 	#echo $i $m $max
+	if [ "$mode" == "tree" ] ; then
+		awk '{print $2 "," $3}' "$1" | ./parse -q -t -i $x -s $i -e $m | sed '/^ *$/d' >> "$output"
+	else
+		awk '{print $2 "," $3}' "$1" | ./parse -q -s $i -e $m | sed '/^ *$/d' >> "$output"
+	fi
 done    
 
