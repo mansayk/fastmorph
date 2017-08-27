@@ -31,19 +31,16 @@ for i in `seq $begin $step $max`; do
 		m=i+step-1
 	fi
 
-	if [ "$mode" == "tree" ] && [ -f "$output" ] ; then
-		x=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
-	fi
-
 	echo "NEXT: $x"
-	#Next free id:1
-	#awk '{print $2 "," $3}' $1 | ./parse -s $i -e $m > $1.ngrams.$i-$m.txt
-	#awk '{print $2 "," $3}' "$1" | ./parse -q -i $x -s $i -e $m >> "$output"
-	#echo $i $m $max
 	if [ "$mode" == "tree" ] ; then
+		if [ -f "$output" ] ; then
+			x=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
+		fi
 		awk '{print $2 "," $3}' "$1" | ./parse -q -t -i $x -s $i -e $m | sed '/^ *$/d' >> "$output"
 	else
 		awk '{print $2 "," $3}' "$1" | ./parse -q -s $i -e $m | sed '/^ *$/d' >> "$output"
 	fi
+
+	#echo $i $m $max
 done    
 
