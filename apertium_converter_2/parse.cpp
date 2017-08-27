@@ -64,7 +64,7 @@ int startId(-1),endId(-1);
 void AddInfo2tree( vector<int> &sug){
   Intlist fwlsug;
   for(int i=0;i<sug.size();i++){
-    if(startId!=-1 && startId >= sug[i]) continue;
+    if(startId!=-1 && startId > sug[i]) continue;
     if(endId!=-1 && endId < sug[i]) continue;
     auto it=fwlsug.before_begin();
     for(int j=i;j<sug.size() && ((j-i)<6);j++)
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
       //    case 'i': NodeId=atoi(optarg); break;
     }
   }
-  cerr<<"word id in range:(";  if(startId!=-1) cerr<<startId; else cerr <<"any";
+  cerr<<"word id in range:[";  if(startId!=-1) cerr<<startId; else cerr <<"any";
   cerr<<':'; if(endId!=-1) cerr<<endId; else cerr<< "any"; cerr<<']'<<endl;
 
   //parsing input data
