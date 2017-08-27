@@ -8,7 +8,9 @@ Params:
        	For example, "_10_ 4 53 34 66 1" (10 is between 100 and 150 here.)
     -e	Last number in the range of the first word ids.
     	If omitted, then till the last one.
-	For example, "_10_ 4 53 34 66 1" (10 is between 100 and 150 here.)
+	For example, "_10_ 4 53 34 66 1" (10 is between 100 and 150 here.
+    -t 
+    -i 
 */
 
 #include<iostream>
