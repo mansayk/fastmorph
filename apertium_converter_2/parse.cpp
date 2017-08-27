@@ -20,6 +20,7 @@ struct SFrase{
   SFrase(int z):id(z),count(1){}
   void AddNode(Intlist &);
   void PrintNode(string);
+  void PrintTree(int , bool =false);
   ~SFrase();
 };
 
@@ -46,7 +47,7 @@ void SFrase::AddNode( Intlist & wordlist){
 
 
 void SFrase::PrintNode(string x){
-  if(id)//a zero id is root of tree and should not be printed
+  if(id!=-1)//a zero id is root of tree and should not be printed
     x+=to_string(id)+'('+to_string(count)+')';
   if(!lwords.empty()){
     for(auto  it=lwords.begin();it!=lwords.end();it++){
@@ -56,9 +57,32 @@ void SFrase::PrintNode(string x){
     cout<<x<<endl;
 }
 
+static int generateNodeId(int iid=-1){
+  static int id=1;
+  if(iid!=-1){
+    id=iid;
+    return iid;
+  }else
+    return id++;
+}
+void SFrase::PrintTree(int parentNodeId, bool root){
+  int nodeId=0;
+  if(root){
+    cout<<"#NodeId;parentNodeId;WordId;amount"<<endl;
+  }else{
+    nodeId=generateNodeId();
+    cout<<nodeId<<';'<<parentNodeId<<';'<<id<<';'<<count<<endl;
+  }
+  if(!lwords.empty()){
+    for(auto  it=lwords.begin();it!=lwords.end();it++){
+      it->second->PrintTree(nodeId);
+    }
+  }  
+}
+
 
 //----------------------------------------
-SFrase fr(0);
+SFrase fr(-1);
 int startId(-1),endId(-1);
 
 void AddInfo2tree( vector<int> &sug){
@@ -76,20 +100,24 @@ void AddInfo2tree( vector<int> &sug){
 
 int main(int argc, char *argv[])
 {
-  //  int NodeId(0);
+  int NodeId(-1);
+  bool printAsTree=false;
   //parse input arguments
   int opt;
-  while((opt=getopt(argc,argv,"s:e:i:h"))!=-1){
+  while((opt=getopt(argc,argv,"s:e:i:ht"))!=-1){
     switch(opt){
-    case 'h': cerr<<"./parse [-s <start word ID>] [-e <end word ID>] [-i <start node ID>"<<endl; break;
+    case 'h': cerr<<"./parse [-s <start word ID>] [-e <end word ID>] [-i <start node ID>] [-t] "<<endl; break;
     case 's': startId=atoi(optarg); break;
     case 'e': endId=atoi(optarg); break;
-      //    case 'i': NodeId=atoi(optarg); break;
+    case 'i': NodeId=atoi(optarg); generateNodeId(NodeId); break;
+    case 't': printAsTree=true; break;
     }
   }
   cerr<<"word id in range:[";  if(startId!=-1) cerr<<startId; else cerr <<"any";
   cerr<<':'; if(endId!=-1) cerr<<endId; else cerr<< "any"; cerr<<']'<<endl;
-
+  if(NodeId!=-1) cerr<<"NodeId started from: "<<NodeId<<endl;
+  cerr<<"Print output as "<< ((printAsTree)?"tree":"simple rows") <<endl;
+  
   //parsing input data
   int count=0;
   string ins;
@@ -114,7 +142,10 @@ int main(int argc, char *argv[])
   }
   AddInfo2tree(sug);
 
-  fr.PrintNode("");
-
-
+  if(printAsTree)
+    fr.PrintTree(0,true);
+  else
+    fr.PrintNode("");
+  
+  return {};
 }
