@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     case 'h': cerr<<"./parse [-s <start word ID>] [-e <end word ID>] [-i <start node ID>] [-t] [-q]"<<endl; break;
     case 's': startId=atoi(optarg); break;
     case 'e': endId=atoi(optarg); break;
-    case 'i': NodeId=atoi(optarg); generateNodeId(NodeId); break;
+    case 'i': NodeId=atoi(optarg); NodeId=(NodeId<1)?1:NodeId; generateNodeId(NodeId); break;
     case 't': printAsTree=true; break;
     case 'q': quiet=true; break;
     }
