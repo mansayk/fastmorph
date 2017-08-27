@@ -112,22 +112,25 @@ int main(int argc, char *argv[])
 {
   int NodeId(-1);
   bool printAsTree=false;
+  bool quiet=false;
   //parse input arguments
   int opt;
-  while((opt=getopt(argc,argv,"s:e:i:ht"))!=-1){
+  while((opt=getopt(argc,argv,"s:e:i:htq"))!=-1){
     switch(opt){
-    case 'h': cerr<<"./parse [-s <start word ID>] [-e <end word ID>] [-i <start node ID>] [-t] "<<endl; break;
+    case 'h': cerr<<"./parse [-s <start word ID>] [-e <end word ID>] [-i <start node ID>] [-t] [-q]"<<endl; break;
     case 's': startId=atoi(optarg); break;
     case 'e': endId=atoi(optarg); break;
     case 'i': NodeId=atoi(optarg); generateNodeId(NodeId); break;
     case 't': printAsTree=true; break;
+    case 'q': quiet=true; break;
     }
   }
-  cerr<<"word id in range:[";  if(startId!=-1) cerr<<startId; else cerr <<"any";
-  cerr<<':'; if(endId!=-1) cerr<<endId; else cerr<< "any"; cerr<<']'<<endl;
-  if(NodeId!=-1) cerr<<"NodeId started from: "<<NodeId<<endl;
-  cerr<<"Print output as "<< ((printAsTree)?"tree":"simple rows") <<endl;
-  
+  if(!quiet){
+    cerr<<"word id in range:[";  if(startId!=-1) cerr<<startId; else cerr <<"any";
+    cerr<<':'; if(endId!=-1) cerr<<endId; else cerr<< "any"; cerr<<']'<<endl;
+    if(NodeId!=-1) cerr<<"NodeId started from: "<<NodeId<<endl;
+    cerr<<"Print output as "<< ((printAsTree)?"tree":"simple rows") <<endl;
+  }
   //parsing input data
   int count=0;
   string ins;
