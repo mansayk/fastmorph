@@ -1,10 +1,10 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.3.6 - 2017.06.21
+ * Version v5.4.1 - 2017.09.30
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
- *   - creates UNIX domain socket file as a server and waits for queries in JSON format;
+ *   - creates UNIX domain socket file as a server and accepts queries in JSON format;
  *   - has multithreading support.
  *
  * Copyright (C) 2014-present Mansur Saykhunov <tatcorpus@gmail.com>
@@ -29,51 +29,8 @@
 #include "jsmn-master/jsmn.h"	/*   JSON		   */
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
 
+#include "fastmorph.h"
 #include "credentials.h"	/*   DB login, password... */
-
-/**************************************************************************************
- *
- *                          Configuration
- *
- **************************************************************************************/
-
-#define VERSION				"Version v5.3.6 - 2017.06.21"		/*   Version and date								*/
-#define DEBUG				0					/*   Output additional debugging info						*/
-
-#define WORD				0					/*   id of words								*/
-#define LEMMA				1					/*   id of lemmas								*/
-#define TAGS				2					/*   id of tags									*/
-#define WILD				3					/*   id of wild									*/
-#define SEARCH_TYPES_OFFSET		8					/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
-#define SOURCES_ARRAY_SIZE		2750					/*   Size of sources arrays							*/
-#define AMOUNT_SENTENCES		10015946				/*   Amount of sentences							*/
-//#define AMOUNT_SENTENCES		64900					/*   Amount of sentences	TEST						*/
-#define SIZE_ARRAY_MAIN			(139991551 + SOURCES_ARRAY_SIZE)	/*   Size of array_main								*/
-//#define SIZE_ARRAY_MAIN		(1000000 + SOURCES_ARRAY_SIZE)		/*   Size of array_main		TEST						*/
-#define TAGS_ARRAY_SIZE			14864					/*   Size of tags combinations array						*/
-#define TAGS_UNIQ_BUFFER_SIZE		32					/*   Length of buffer for uniq tags 						*/
-#define TAGS_UNIQ_ARRAY_SIZE		134					/*   Amount of uniq tags	 						*/
-#define WORDS_BUFFER_SIZE		256					/*   Buffer size for words (strings)						*/
-#define WORDS_ARRAY_SIZE		1353045					/*   Size of words array							*/
-#define WORDS_CASE_ARRAY_SIZE		1590290					/*   Size of words (case sensitive)						*/
-#define LEMMAS_ARRAY_SIZE		963291					/*   Size of lemmas array							*/
-#define UNITED_ARRAY_SIZE		1726045					/*   Size of united array							*/
-#define SOURCE_TYPES_BUFFER_SIZE	64					/*   Length of buffer for source types (book, www...ru)				*/
-#define SOURCE_OFFSET			-2000000000				/*   Offset for the source value in the main array to differ it from sent begin */
-#define MYSQL_LOAD_LIMIT		100000					/*   Portions to load from MySQL: SELECT ... LIMIT 100000			*/
-#define FOUND_SENTENCES_LIMIT_DEFAULT	100					/*   Amount of found sentences to collect					*/
-#define SOURCE_BUFFER_SIZE		10240					/*   Buffer for found sentences							*/
-#define SOCKET_BUFFER_SIZE		10240					/*   Size of input and output buffers for socket				*/
-#define SEARCH_THREADS			4					/*   Threads count to perform search: depends on CPU cores			*/
-#define AMOUNT_TOKENS			6					/*   Max amount of words to search						*/
-
-// HTML tags for highlighting words
-#define FOUND_HTML_OPEN		"<span id='found_word_%d' class='found_word' title='(%s%s) %s'>"	/*   escaping '\' if lemma is '"', lemma utself, tag	*/
-#define REGULAR_HTML_OPEN	"<span title='(%s%s) %s'>"						/*   escaping '\' if lemma is '"', lemma utself, tags	*/
-#define HTML_CLOSE		"</span>"
-
-// Path to socket file
-#define UNIX_DOMAIN_SOCKET	"/tmp/fastmorph.socket"
 
 /**************************************************************************************
  *
@@ -116,20 +73,36 @@ int size_list_lemmas;
 char *list_tags;							/*   Long string for tags   */
 int size_list_tags;
 
-char *list_sources;							/*   Long string for sources   */
-int size_list_sources;
+//char *list_sources;							/*   Long string for sources   */
+//int size_list_sources;
 
-char source_types[SOURCES_ARRAY_SIZE][SOURCE_TYPES_BUFFER_SIZE];	/*   source types: book, www...com   */
+char *list_sources_author;						/*   Long string for sources authors   */
+int size_list_sources_author;
+
+char *list_sources_title;						/*   Long string for sources titles   */
+int size_list_sources_title;
+
+char *list_sources_date;						/*   Long string for sources dates   */
+int size_list_sources_date;
+
+char *list_sources_genre;						/*   Long string for sources genres   */
+int size_list_sources_genre;
+
+//char source_types[SOURCES_ARRAY_SIZE][SOURCE_TYPES_BUFFER_SIZE];	/*   source types: book, www...com   */
 
 int source_mask[SOURCES_ARRAY_SIZE][3];					/*   TODO: For subcorpora. Texts: bitmask, begin, end   */  
 
 int sentence_source[AMOUNT_SENTENCES];					/*   Sentence-source associations   */
 
-char *ptr_words_case[WORDS_CASE_ARRAY_SIZE];				/*   Array of uniq pointers to list_words_case elements   */
-char *ptr_words[WORDS_ARRAY_SIZE];					/*   Array of uniq pointers   */
-char *ptr_lemmas[WORDS_ARRAY_SIZE];					/*   Array of uniq pointers   */
-char *ptr_tags[TAGS_ARRAY_SIZE];					/*   Array of uniq pointers   */
-char *ptr_sources[SOURCES_ARRAY_SIZE];					/*   Array of uniq pointers   */
+char *ptr_words_case[WORDS_CASE_ARRAY_SIZE];				/*   Array of pointers to list_words_case elements   */
+char *ptr_words[WORDS_ARRAY_SIZE];					/*   Array of pointers...   */
+char *ptr_lemmas[WORDS_ARRAY_SIZE];					/*   Array of pointers...   */
+char *ptr_tags[TAGS_ARRAY_SIZE];					/*   Array of pointers...   */
+//char *ptr_sources[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
+char *ptr_sources_author[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
+char *ptr_sources_title[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
+char *ptr_sources_date[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
+char *ptr_sources_genre[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 
 char wildmatch[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];			/*   search string: *еш* -> еш (кеше, ешрак, теш)   */
 char word[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кешегә, ешрак, тешнең   */
@@ -449,9 +422,17 @@ int func_read_mysql()
 	MYSQL_RES *myresult;
 	MYSQL_ROW row;
 	char *ptr;
+	char *ptr_author;
+	char *ptr_title;
+	char *ptr_date;
+	char *ptr_genre;
 	char *endptr;
 	char mycommand[200];
 	int i;
+	int iauthor;
+	int ititle;
+	int idate;
+	int igenre;
 	int x;
 
 	if(func_connect_mysql() == 0) {
@@ -652,8 +633,12 @@ int func_read_mysql()
 		// load sources
 		printf("\n    Sources: getting list...");
 		fflush(stdout);
-		ptr = list_sources;
-		if(mysql_query(myconnect, "SELECT col2,col3 FROM sources ORDER BY col1")) {
+		//ptr = list_sources;
+		ptr_author = list_sources_author;
+		ptr_title = list_sources_title;
+		ptr_date = list_sources_date;
+		ptr_genre = list_sources_genre;
+		if(mysql_query(myconnect, "SELECT author, title, date, genre FROM sources ORDER BY id")) {
 			printf("\n***ERROR: Cannot make query to MySQL!\n");
 			exit(-1);
 		} else {
@@ -661,10 +646,15 @@ int func_read_mysql()
 				printf("\n***ERROR: MySQL - problem in 'myresult'!\n");
 				exit(-1);
 			} else {
-				i = 0;
+				//i = 0;
+				iauthor = 0;
+				ititle = 0;
+				idate = 0;
+				igenre = 0;
 				printf("\33[2K\r    Sources: importing...");
 				fflush(stdout);
 				while((row = mysql_fetch_row(myresult))) {
+					/*
 					ptr_sources[i] = ptr;
 					ptr = strncpy(ptr, row[0], SOURCE_BUFFER_SIZE - 1);
 					ptr[SOURCE_BUFFER_SIZE - 1] = '\0';
@@ -672,6 +662,31 @@ int func_read_mysql()
 					strncpy(source_types[i], row[1], SOURCE_TYPES_BUFFER_SIZE - 1);
 					source_types[i][SOURCE_TYPES_BUFFER_SIZE - 1] = '\0';
 					++i;
+					*/
+					// authors
+					ptr_sources_author[iauthor] = ptr_author;
+					ptr_author = strncpy(ptr_author, row[0], SOURCE_BUFFER_SIZE - 1);
+					ptr_author[SOURCE_BUFFER_SIZE - 1] = '\0';
+					ptr_author += strlen(row[0]) + 1;
+					++iauthor;
+					// titles
+					ptr_sources_title[ititle] = ptr_title;
+					ptr_title = strncpy(ptr_title, row[1], SOURCE_BUFFER_SIZE - 1);
+					ptr_title[SOURCE_BUFFER_SIZE - 1] = '\0';
+					ptr_title += strlen(row[1]) + 1;
+					++ititle;
+					// dates
+					ptr_sources_date[idate] = ptr_date;
+					ptr_date = strncpy(ptr_date, row[2], SOURCE_BUFFER_SIZE - 1);
+					ptr_date[SOURCE_BUFFER_SIZE - 1] = '\0';
+					ptr_date += strlen(row[2]) + 1;
+					++idate;
+					// genres
+					ptr_sources_genre[igenre] = ptr_genre;
+					ptr_genre = strncpy(ptr_genre, row[3], SOURCE_BUFFER_SIZE - 1);
+					ptr_genre[SOURCE_BUFFER_SIZE - 1] = '\0';
+					ptr_genre += strlen(row[3]) + 1;
+					++igenre;
 				}
 				printf("\33[2K\r    Sources: %lld rows imported.", mysql_num_rows(myresult));
 			}
@@ -867,7 +882,7 @@ static inline int func_cmp_ints(const void *a, const void *b)
 /*
  * Build text sentences from array_main
  */
-int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, unsigned long long z1, unsigned long long z2, unsigned long long z3, unsigned long long z4, unsigned long long z5, unsigned long long z6)
+int func_build_sents(unsigned int end, unsigned int curnt_sent, unsigned long long sent_begin, unsigned long long z1, unsigned long long z2, unsigned long long z3, unsigned long long z4, unsigned long long z5, unsigned long long z6)
 {
 	int x, y;
 	unsigned long long z[] = {z1, z2, z3, z4, z5, z6};
@@ -882,8 +897,9 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 	snprintf(temp, 100, "%d", curnt_sent);
 	strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
+	/*
 	strncat(bufout, ",\"source\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	strncpy(temp, ptr_sources[sentence_source[curnt_sent - 1] - 1], SOCKET_BUFFER_SIZE - 1); // '] - 1' because 'sources' table begins with 0
+	strncpy(temp, ptr_sources[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
 	y = 0;
@@ -900,12 +916,91 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 	bufout[x] = '"';
 	bufout[++x] = ',';
 	bufout[++x] = '\0';
+	*/
 
+	strncat(bufout, ",\"author\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+	strncpy(temp, ptr_sources_author[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
+	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
+	x = strlen(bufout);
+	y = 0;
+	while(temp[y]) {
+		if(temp[y] == '"') {
+			bufout[x] = '\\';
+			bufout[++x] = '"';
+		} else {
+			bufout[x] = temp[y];
+		}
+		++y;
+		++x;
+	}
+	bufout[x] = '"';
+	//bufout[++x] = ',';
+	bufout[++x] = '\0';
+
+	strncat(bufout, ",\"title\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+	strncpy(temp, ptr_sources_title[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
+	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
+	x = strlen(bufout);
+	y = 0;
+	while(temp[y]) {
+		if(temp[y] == '"') {
+			bufout[x] = '\\';
+			bufout[++x] = '"';
+		} else {
+			bufout[x] = temp[y];
+		}
+		++y;
+		++x;
+	}
+	bufout[x] = '"';
+	//bufout[++x] = ',';
+	bufout[++x] = '\0';
+
+	strncat(bufout, ",\"date\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+	strncpy(temp, ptr_sources_date[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
+	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
+	x = strlen(bufout);
+	y = 0;
+	while(temp[y]) {
+		if(temp[y] == '"') {
+			bufout[x] = '\\';
+			bufout[++x] = '"';
+		} else {
+			bufout[x] = temp[y];
+		}
+		++y;
+		++x;
+	}
+	bufout[x] = '"';
+	//bufout[++x] = ',';
+	bufout[++x] = '\0';
+
+	strncat(bufout, ",\"genre\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+	strncpy(temp, ptr_sources_genre[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
+	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
+	x = strlen(bufout);
+	y = 0;
+	while(temp[y]) {
+		if(temp[y] == '"') {
+			bufout[x] = '\\';
+			bufout[++x] = '"';
+		} else {
+			bufout[x] = temp[y];
+		}
+		++y;
+		++x;
+	}
+	bufout[x] = '"';
+	//bufout[++x] = ',';
+	bufout[++x] = '\0';
+
+	/*
 	strncat(bufout, "\"source_type\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	strncat(bufout, source_types[sentence_source[curnt_sent - 1] - 1], SOCKET_BUFFER_SIZE - strlen(bufout) - 1); // book <> www, in future - subcorpora?
+	strncat(bufout, source_types[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	strncat(bufout, "\",", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+	*/
 
-	strncat(bufout, "\"sentence\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+	strncat(bufout, ",\"sentence\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	y = 0;
 	do { 
 		// Punctuation and whitespaces
@@ -940,6 +1035,9 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 				quote_open = !quote_open;
 				break;
 		}
+
+		if(DEBUG) 
+			printf("\nfunc_build_sents: z1=%lld\tsent_begin=%lld\tsentence=%d\tposition=%lld\tunited=%d\tword=%s", z1, sent_begin, curnt_sent, sent_begin, array_united[sent_begin], united_words_case[abs(array_united[sent_begin])]);
 
 		// 2-byte quotes ( « » ) !!! NOT TESTED !!!
 		if(!strncmp(united_words_case[abs(array_united[sent_begin])], "«", 2))
@@ -981,7 +1079,7 @@ int func_build_sents(unsigned int curnt_sent, unsigned long long sent_begin, uns
 			lspace = rspace;
 		else
 			lspace = 1;
-	} while(array_united[++sent_begin] > 0);
+	} while(array_united[++sent_begin] >= 0 && sent_begin < end);
 
 	strncat(bufout, "\"},", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	if(DEBUG) 
@@ -1078,9 +1176,13 @@ void * func_run_cycle(struct thread_data *thdata)
 
 		progress = 0;
 		found_all = 0;
+		sent_begin = 0;
 		z1 = main_begin;
 		last_pos = thdata->last_pos;
 		curnt_sent = first_sentence;
+
+		if(DEBUG) 
+			printf("\nz1=%lld, positive=%d, last_pos=%lld, curnt_sent=%d, sent_begin=%lld, found_limit=%d", z1, positive, last_pos, curnt_sent, sent_begin, found_limit);
 
 		// param1
 		while(z1 < main_end) {
@@ -1094,43 +1196,50 @@ void * func_run_cycle(struct thread_data *thdata)
 				sent_begin = z1;
 				++curnt_sent;
 			}
+			if(DEBUG) {
+				if(z1 < 10) {
+					printf("\nz1=%lld, positive=%d, last_pos=%lld, curnt_sent=%d, sent_begin=%lld, found_limit=%d", z1, positive, last_pos, curnt_sent, sent_begin, found_limit);
+					printf("\t(%lld==%lld)", united_mask[positive] & 0xFF, search_types & 0xFF);
+				}
+			}
 			if((united_mask[positive] & 0xFF) == (search_types & 0xFF)) {
 				// param2
 				if(params > 1) {
 					z2 = z1 + dist1_start;
 					x2 = z1 + dist1_end;
-					while(z2 < main_end && z2 <= x2 && array_united[z2] > 0)  {
+					while(z2 < main_end && z2 <= x2 && array_united[z2] >= 0)  {
 						if((united_mask[array_united[z2]] & 0xFF00) == (search_types & 0xFF00)) {
 							// param3
 							if(params > 2) {
 								z3 = z2 + dist2_start;
 								x3 = z2 + dist2_end;
-								while(z3 < main_end && z3 <= x3 && array_united[z3] > 0) {
+								while(z3 < main_end && z3 <= x3 && array_united[z3] >= 0) {
 									if((united_mask[array_united[z3]] & 0xFF0000) == (search_types & 0xFF0000)) {
 										// param4
 										if(params > 3) {
 											z4 = z3 + dist3_start;
 											x4 = z3 + dist3_end;
-											while(z4 < main_end && z4 <= x4 && array_united[z4] > 0) {
+											while(z4 < main_end && z4 <= x4 && array_united[z4] >= 0) {
 												if((united_mask[array_united[z4]] & 0xFF000000) == (search_types & 0xFF000000)) {
 													// param5
 													if(params > 4) {
 														z5 = z4 + dist4_start;
 														x5 = z4 + dist4_end;
-														while(z5 < main_end && z5 <= x5 && array_united[z5] > 0) {
+														while(z5 < main_end && z5 <= x5 && array_united[z5] >= 0) {
 															if((united_mask[array_united[z5]] & 0xFF00000000) == (search_types & 0xFF00000000)) {
 																// param6
 																if(params > 5) {
 																	z6 = z5 + dist5_start;
 																	x6 = z5 + dist5_end;
-																	while(z6 < main_end && z6 <= x6 && array_united[z6] > 0) {
+																	while(z6 < main_end && z6 <= x6 && array_united[z6] >= 0) {
 																		if((united_mask[array_united[z6]] & 0xFF0000000000) == (search_types & 0xFF0000000000)) {
-																			if(z1 > last_pos && found_limit) {
+																			//if(z1 > last_pos && found_limit) {
+																			if((z1 > last_pos || !last_pos) && found_limit) {
 																				sem_wait(&count_sem);
 																				if(found_limit) {
 																					--found_limit;
 																					sem_post(&count_sem);
-																					func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
+																					func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
 																					last_pos = z1;
 																				} else {
 																					sem_post(&count_sem);
@@ -1144,12 +1253,13 @@ void * func_run_cycle(struct thread_data *thdata)
 																		++z6;
 																	}
 																} else {
-																	if(z1 > last_pos && found_limit) {
+																	//if(z1 > last_pos && found_limit) {
+																	if((z1 > last_pos || !last_pos) && found_limit) {
 																		sem_wait(&count_sem);
 																		if(found_limit) {
 																			--found_limit;
 																			sem_post(&count_sem);
-																			func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
+																			func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
 																			last_pos = z1;
 																		} else {
 																			sem_post(&count_sem);
@@ -1164,12 +1274,13 @@ void * func_run_cycle(struct thread_data *thdata)
 															++z5;
 														}
 													} else {
-														if(z1 > last_pos && found_limit) {
+														//if(z1 > last_pos && found_limit) {
+														if((z1 > last_pos || !last_pos) && found_limit) {
 															sem_wait(&count_sem);
 															if(found_limit) {
 																--found_limit;
 																sem_post(&count_sem);
-																func_build_sents(curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
+																func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
 																last_pos = z1;
 															} else {
 																sem_post(&count_sem);
@@ -1184,12 +1295,13 @@ void * func_run_cycle(struct thread_data *thdata)
 												++z4;
 											}
 										} else {
-											if(z1 > last_pos && found_limit) {
+											//if(z1 > last_pos && found_limit) {
+											if((z1 > last_pos || !last_pos) && found_limit) {
 												sem_wait(&count_sem);
 												if(found_limit) {
 													--found_limit;
 													sem_post(&count_sem);
-													func_build_sents(curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
+													func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
 													last_pos = z1;
 												} else {
 													sem_post(&count_sem);
@@ -1204,12 +1316,13 @@ void * func_run_cycle(struct thread_data *thdata)
 									++z3;
 								}
 							} else {
-								if(z1 > last_pos && found_limit) {
+								//if(z1 > last_pos && found_limit) {
+								if((z1 > last_pos || !last_pos) && found_limit) {
 									sem_wait(&count_sem);
 									if(found_limit) {
 										--found_limit;
 										sem_post(&count_sem);
-										func_build_sents(curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
+										func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
 										last_pos = z1;
 									} else {
 										sem_post(&count_sem);
@@ -1224,12 +1337,14 @@ void * func_run_cycle(struct thread_data *thdata)
 						++z2;
 					} 
 				} else {
-					if(z1 > last_pos && found_limit) {
+					//if(z1 > last_pos && found_limit) {
+					//if((z1 > last_pos || z1 == main_begin) && found_limit) {
+					if((z1 > last_pos || !last_pos) && found_limit) {
 						sem_wait(&count_sem);
 						if(found_limit) {
 							--found_limit;
 							sem_post(&count_sem);
-							func_build_sents(curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
+							func_build_sents(main_end, curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
 							last_pos = z1;
 						} else {
 							sem_post(&count_sem);
@@ -1783,9 +1898,29 @@ int main(/* int argc, char *argv[] */)
 	memset(list_tags, 1, sizeof(*list_tags) * size_list_tags);
 
 	// sources
-	size_list_sources = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
-	list_sources = malloc(sizeof(*list_sources) * size_list_sources);
-	memset(list_sources, 1, sizeof(*list_sources) * size_list_sources);
+	//size_list_sources = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
+	//list_sources = malloc(sizeof(*list_sources) * size_list_sources);
+	//memset(list_sources, 1, sizeof(*list_sources) * size_list_sources);
+
+	// authors
+	size_list_sources_author = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
+	list_sources_author = malloc(sizeof(*list_sources_author) * size_list_sources_author);
+	memset(list_sources_author, 1, sizeof(*list_sources_author) * size_list_sources_author);
+
+	// titles
+	size_list_sources_title = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
+	list_sources_title = malloc(sizeof(*list_sources_title) * size_list_sources_title);
+	memset(list_sources_title, 1, sizeof(*list_sources_title) * size_list_sources_title);
+
+	// dates
+	size_list_sources_date = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
+	list_sources_date = malloc(sizeof(*list_sources_date) * size_list_sources_date);
+	memset(list_sources_date, 1, sizeof(*list_sources_date) * size_list_sources_date);
+
+	// genres
+	size_list_sources_genre = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
+	list_sources_genre = malloc(sizeof(*list_sources_genre) * size_list_sources_genre);
+	memset(list_sources_genre, 1, sizeof(*list_sources_genre) * size_list_sources_genre);
 
 	func_read_mysql();
 	func_find_distances_for_threads();
@@ -1825,12 +1960,44 @@ int main(/* int argc, char *argv[] */)
 	list_tags = realloc(list_tags, size_list_tags);
 
 	// resizing list_sources
+	//printf("\n\nList_sources:");
+	//printf("\n  Old size: %d bytes", size_list_sources);
+	//do { --size_list_sources; } while(list_sources[size_list_sources]);
+	//++size_list_sources;
+	//printf("\n  New size: %d bytes", size_list_sources);
+	//list_sources = realloc(list_sources, size_list_sources);
+
+	// resizing authors
 	printf("\n\nList_sources:");
-	printf("\n  Old size: %d bytes", size_list_sources);
-	do { --size_list_sources; } while(list_sources[size_list_sources]);
-	++size_list_sources;
-	printf("\n  New size: %d bytes", size_list_sources);
-	list_sources = realloc(list_sources, size_list_sources);
+	printf("\n  Old size: %d bytes", size_list_sources_author);
+	do { --size_list_sources_author; } while(list_sources_author[size_list_sources_author]);
+	++size_list_sources_author;
+	printf("\n  New size: %d bytes", size_list_sources_author);
+	list_sources_author = realloc(list_sources_author, size_list_sources_author);
+
+	// resizing titles
+	printf("\n\nList_sources:");
+	printf("\n  Old size: %d bytes", size_list_sources_title);
+	do { --size_list_sources_title; } while(list_sources_title[size_list_sources_title]);
+	++size_list_sources_title;
+	printf("\n  New size: %d bytes", size_list_sources_title);
+	list_sources_title = realloc(list_sources_title, size_list_sources_title);
+
+	// resizing dates
+	printf("\n\nList_sources:");
+	printf("\n  Old size: %d bytes", size_list_sources_date);
+	do { --size_list_sources_date; } while(list_sources_date[size_list_sources_date]);
+	++size_list_sources_date;
+	printf("\n  New size: %d bytes", size_list_sources_date);
+	list_sources_date = realloc(list_sources_date, size_list_sources_date);
+
+	// resizing genres
+	printf("\n\nList_sources:");
+	printf("\n  Old size: %d bytes", size_list_sources_genre);
+	do { --size_list_sources_genre; } while(list_sources_genre[size_list_sources_genre]);
+	++size_list_sources_genre;
+	printf("\n  New size: %d bytes", size_list_sources_genre);
+	list_sources_genre = realloc(list_sources_genre, size_list_sources_genre);
 
 	sem_init(&count_sem, 0, 1);
 
