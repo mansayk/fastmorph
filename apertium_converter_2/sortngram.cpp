@@ -4,6 +4,7 @@
 #include<vector>
 #include<string>
 #include<cstdlib>
+#include<unistd.h>
 
 struct NODEID{
   unsigned int nodeid;
@@ -17,7 +18,19 @@ using namespace std;
 vector<NODEID> vel;
 bool velsort(unsigned i, unsigned j){ return vel[i].weight > vel[j].weight;}
 
-int main(){
+int main(int argc, char *argv[]){
+  string filename("outputfile.txt");
+  //parse input arguments
+  int opt;
+  while((opt=getopt(argc,argv,"o:h"))!=-1){
+    switch(opt){
+    case 'h': cerr<<"./sortngram [-o <output filename>] [-h]"<<endl; break;
+    case 'o': filename=optarg; break;
+    }
+  }
+
+
+  
   //  cout<<"size:"<<sizeof(int)<<endl;
   string ins;
   NODEID el;
@@ -36,7 +49,6 @@ int main(){
        	while(point<=el.nodeid){ vel.push_back(NODEID()); ++point;}
 	vel[el.nodeid]=el;
 	if(!++ciclecounter) cout<<"Load tree... "<<point<<'\r';
-	//	cout<<el.nodeid<<';'<<el.parentid<<';'<<el.wordid<<';'<<el.weight<<endl;
       }
     }
   }
@@ -53,8 +65,8 @@ int main(){
     cout<<"level:"<<o<<"->"<<sum[o]<<endl;
 
   ofstream fout;
-  fout.open("outfile.txt");
-  cout<<"Sorting by weight.."<<endl;
+  fout.open(filename);
+  cout<<"Sorting by weight and saving to "<<filename<<endl;
   vector <unsigned> index;
   for(int lev=1;lev<7;++lev){
     cout<<"Level: "<<lev<<endl;  
