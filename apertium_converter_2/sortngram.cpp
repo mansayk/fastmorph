@@ -61,6 +61,7 @@ int main(int argc, char *argv[]){
       level[element.nodeid]=level[element.parentid]+1;
       sum[level[element.nodeid]]++;
     }
+  //part of code below based on a source confidence, the source must have parent node id less than child id
   for(int o=0;o<7;o++)
     cout<<"level:"<<o<<"->"<<sum[o]<<endl;
 
