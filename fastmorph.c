@@ -105,6 +105,7 @@ char *ptr_sources_date[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 char *ptr_sources_genre[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 
 char wildmatch[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];			/*   search string: *еш* -> еш (кеше, ешрак, теш)   */
+char wildmatch_lemma[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];			/*   search string: *еш* -> еш (кеше, ешрак, теш)   */ //-0000000000000000000
 char word[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кешегә, ешрак, тешнең   */
 char lemma[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кеше, еш, теш   */
 char tags[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: *<n>*<nom>*<pl>*   */
@@ -277,7 +278,7 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", tags[j]);
 			}
 			i += t[i+1].size + 1;
-		// Wildmatch strings
+		// Wildmatch words 0000000000000000000
 		} else if(jsoneq(strin, &t[i], "wildmatch") == 0) {
 			errno = 0;
 			printf("- wildmatch[_]:\n");
@@ -292,6 +293,33 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", wildmatch[j]);
 			}
 			i += t[i+1].size + 1;
+
+
+
+
+
+		// Wildmatch lemmas 000000000000000000
+		} else if(jsoneq(strin, &t[i], "wildmatch_lemma") == 0) {
+			errno = 0;
+			printf("- wildmatch_lemma[_]:\n");
+			if(t[i+1].type != JSMN_ARRAY) {
+				continue;
+			}
+			for (j = 0; j < t[i+1].size; j++) {
+				jsmntok_t *g = &t[i+j+2];
+				printf("  * %.*s / ", g->end - g->start, strin + g->start);
+				strncpy(wildmatch_lemma[j], strin + g->start, g->end - g->start);
+				wildmatch_lemma[j][g->end - g->start] = '\0';
+				printf("%s\n", wildmatch_lemma[j]);
+			}
+			i += t[i+1].size + 1;
+
+
+
+
+
+
+
 		// Distances from
 		} else if(jsoneq(strin, &t[i], "dist_from") == 0) {
 			errno = 0;
@@ -1511,6 +1539,20 @@ void * func_run_united(struct thread_data_united *thdata_united)
 					func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
 				}
 			}
+
+
+
+			// 000000000000000000000000
+			if(wildmatch_lemma[x][0]) {
+				func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+			}
+
+
+
+
+
+
+
 		}
 
 		// Decrementing counter and sending signal to func_run_socket()
@@ -1573,7 +1615,7 @@ int func_fill_search_mask()
 	morph_types = 0;
 
 	// Calculate amount of params (words) to search
-	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0])) {
+	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0] || wildmatch_lemma[params][0])) { // 000000000000000000000
 		++params;
 	}
 
@@ -1589,6 +1631,17 @@ int func_fill_search_mask()
 			morph_types += ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * x + TAGS));
 		if(wildmatch[x][0])
 			morph_types += ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * x + WILD));
+
+
+
+
+		// 00000000000000000000000000
+		if(wildmatch_lemma[x][0])
+			morph_types += ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * x + WILD_LEMMA));
+
+
+
+
 	}
 	if(DEBUG)
 		printf("\nmorph_types: %llu\n", morph_types);

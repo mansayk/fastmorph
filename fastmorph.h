@@ -18,6 +18,7 @@
 #define LEMMA				1					/*   id of lemmas								*/
 #define TAGS				2					/*   id of tags									*/
 #define WILD				3					/*   id of wild									*/
+#define WILD_LEMMA			4					/*   id of wild									*/
 #define SEARCH_TYPES_OFFSET		8					/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
 #define SOURCES_ARRAY_SIZE		2750					/*   Size of sources arrays							*/
 #define AMOUNT_SENTENCES		10015946				/*   Amount of sentences							*/
