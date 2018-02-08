@@ -11,13 +11,14 @@
 #ifndef FASTNGRAMS_H
 #define FASTNGRAMS_H
 
-#define VERSION				"Version v1.0.0 - 2017.11.26"		/*   Version and date								*/
+#define VERSION				"Version v5.5.0 - 2018.02.08"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
 #define WORD				0					/*   id of words								*/
 #define LEMMA				1					/*   id of lemmas								*/
 #define TAGS				2					/*   id of tags									*/
-#define WILD				3					/*   id of wild									*/
+#define WILD				3					/*   id of wildmatch words							*/
+#define WILD_LEMMA			4					/*   id of wildmatch lemmas							*/
 #define SEARCH_TYPES_OFFSET		8					/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
 #define SOURCES_ARRAY_SIZE		2750					/*   Size of sources arrays							*/
 #define AMOUNT_SENTENCES		10015946				/*   Amount of sentences							*/

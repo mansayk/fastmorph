@@ -1,6 +1,6 @@
 /*
  * fastngrams.c - Fast search engine for n-grams.
- * Version v1.0.0 - 2017.11.26
+ * Version v5.5.0 - 2018.02.08
  *
  * "fastngrams" is a high speed search engine for n-grams:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -104,7 +104,7 @@ int size_list_sources_genre;
 
 //char source_types[SOURCES_ARRAY_SIZE][SOURCE_TYPES_BUFFER_SIZE];	/*   source types: book, www...com   */
 
-int source_mask[SOURCES_ARRAY_SIZE][3];					/*   TODO: For subcorpora. Texts: bitmask, begin, end   */  
+int source_mask[SOURCES_ARRAY_SIZE][3];					/*   TODO: For subcorpora. Texts: bitmask, begin, end   */
 
 //int sentence_source[AMOUNT_SENTENCES];				/*   Sentence-source associations   */
 
@@ -119,6 +119,7 @@ char *ptr_sources_date[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 char *ptr_sources_genre[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 
 char wildmatch[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];			/*   search string: *еш* -> еш (кеше, ешрак, теш)   */
+char wildmatch_lemma[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];			/*   search string: (*еш*) -> еш (кеше, ешрак, теш)   */
 char word[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кешегә, ешрак, тешнең   */
 char lemma[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кеше, еш, теш   */
 char tags[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: *<n>*<nom>*<pl>*   */
@@ -186,8 +187,8 @@ int finished_united = 0;
  * Get start time
  */
 void time_start(struct timeval *tv)
-{ 
-	gettimeofday(tv, &tz); 
+{
+	gettimeofday(tv, &tz);
 }
 
 
@@ -195,14 +196,14 @@ void time_start(struct timeval *tv)
  * Get finish time and calculate the difference
  */
 long time_stop(struct timeval *tv_begin)
-{ 
+{
 	struct timeval tv, dtv;
 	gettimeofday(&tv, &tz);
 	dtv.tv_sec = tv.tv_sec - tv_begin->tv_sec;
 	dtv.tv_usec = tv.tv_usec - tv_begin->tv_usec;
-	if(dtv.tv_usec < 0) { 
-		dtv.tv_sec--; 
-		dtv.tv_usec += 1000000; 
+	if(dtv.tv_usec < 0) {
+		dtv.tv_sec--;
+		dtv.tv_usec += 1000000;
 	}
 	return (dtv.tv_sec * 1000) + (dtv.tv_usec / 1000);
 }
@@ -223,7 +224,7 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 /*
  * JSMN
  */
-int func_jsmn_json(char *strin, int len) 
+int func_jsmn_json(char *strin, int len)
 {
 	int i;
 	int r;
@@ -233,7 +234,7 @@ int func_jsmn_json(char *strin, int len)
 
 	jsmn_parser p;
 	jsmntok_t t[128]; // We expect no more than 128 tokens
-	
+
 	jsmn_init(&p);
 	r = jsmn_parse(&p, strin, len, t, sizeof(t)/sizeof(t[0]));
 	if(r < 0) {
@@ -279,7 +280,7 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", lemma[j]);
 			}
 			i += t[i+1].size + 1;
-		// Tags	
+		// Tags
 		} else if(jsoneq(strin, &t[i], "tags") == 0) {
 			errno = 0;
 			printf("- tags[_]:\n");
@@ -294,7 +295,7 @@ int func_jsmn_json(char *strin, int len)
 				printf("%s\n", tags[j]);
 			}
 			i += t[i+1].size + 1;
-		// Wildmatch strings
+		// Wildmatch words
 		} else if(jsoneq(strin, &t[i], "wildmatch") == 0) {
 			errno = 0;
 			printf("- wildmatch[_]:\n");
@@ -307,6 +308,21 @@ int func_jsmn_json(char *strin, int len)
 				strncpy(wildmatch[j], strin + g->start, g->end - g->start);
 				wildmatch[j][g->end - g->start] = '\0';
 				printf("%s\n", wildmatch[j]);
+			}
+			i += t[i+1].size + 1;
+		// Wildmatch lemmas
+		} else if(jsoneq(strin, &t[i], "wildmatch_lemma") == 0) {
+			errno = 0;
+			printf("- wildmatch_lemma[_]:\n");
+			if(t[i+1].type != JSMN_ARRAY) {
+				continue;
+			}
+			for (j = 0; j < t[i+1].size; j++) {
+				jsmntok_t *g = &t[i+j+2];
+				printf("  * %.*s / ", g->end - g->start, strin + g->start);
+				strncpy(wildmatch_lemma[j], strin + g->start, g->end - g->start);
+				wildmatch_lemma[j][g->end - g->start] = '\0';
+				printf("%s\n", wildmatch_lemma[j]);
 			}
 			i += t[i+1].size + 1;
 		// Distances from
@@ -322,16 +338,16 @@ int func_jsmn_json(char *strin, int len)
 				strncpy(buf, strin + g->start, g->end - g->start);
 				buf[g->end - g->start] = '\0';
 				errno = 0;
-				dist_from[j] = strtoull(buf, &ptr, 10);	
+				dist_from[j] = strtoull(buf, &ptr, 10);
 				// Check for various possible errors
 				if(errno == ERANGE)
 					perror("\nstrtol");
-				if(ptr == buf) 
+				if(ptr == buf)
 					fprintf(stderr, "\nNo digits were found!");
 				printf("%u\n", dist_from[j]);
 			}
 			i += t[i+1].size + 1;
-		// Distances to	
+		// Distances to
 		} else if(jsoneq(strin, &t[i], "dist_to") == 0) {
 			errno = 0;
 			printf("- dist_to[_]:\n");
@@ -344,11 +360,11 @@ int func_jsmn_json(char *strin, int len)
 				strncpy(buf, strin + g->start, g->end - g->start);
 				buf[g->end - g->start] = '\0';
 				errno = 0;
-				dist_to[j] = strtoull(buf, &ptr, 10);	
+				dist_to[j] = strtoull(buf, &ptr, 10);
 				// Check for various possible errors
-				if(errno == ERANGE) 
+				if(errno == ERANGE)
 					perror("\nstrtol");
-				if(ptr == buf) 
+				if(ptr == buf)
 					fprintf(stderr, "\nNo digits were found");
 				printf("%u\n", dist_to[j]);
 			}
@@ -366,11 +382,11 @@ int func_jsmn_json(char *strin, int len)
 				strncpy(buf, strin + g->start, g->end - g->start);
 				buf[g->end - g->start] = '\0';
 				errno = 0;
-				case_sensitive[j] = strtoull(buf, &ptr, 10);	
+				case_sensitive[j] = strtoull(buf, &ptr, 10);
 				// Check for various possible errors
-				if(errno == ERANGE) 
+				if(errno == ERANGE)
 					perror("\nstrtol");
-				if(ptr == buf) 
+				if(ptr == buf)
 					fprintf(stderr, "\nNo digits were found");
 				printf("%u\n", case_sensitive[j]);
 			}
@@ -381,15 +397,15 @@ int func_jsmn_json(char *strin, int len)
 			strncpy(buf, strin + t[i+1].start, t[i+1].end - t[i+1].start);
 			buf[t[i+1].end - t[i+1].start] = '\0';
 			errno = 0;
-			return_ngrams = strtol(buf, &ptr, 10);	
+			return_ngrams = strtol(buf, &ptr, 10);
 			// Check for ranges
 			if(return_ngrams < 1 || return_ngrams > 1000) {
 				return_ngrams = FOUND_NGRAMS_LIMIT_DEFAULT;
 			}
 			// Check for various possible errors
-			if(errno == ERANGE) 
+			if(errno == ERANGE)
 				perror("\nstrtol");
-			if(ptr == buf) 
+			if(ptr == buf)
 				fprintf(stderr, "\nNo digits were found");
 			printf("%d\n", return_ngrams);
 			++i;
@@ -409,7 +425,7 @@ int func_jsmn_json(char *strin, int len)
 }
 
 
-/* 
+/*
  * Connecting (or reconnecting) to MySQL (MariaDB)
  */
 int func_connect_mysql()
@@ -422,7 +438,7 @@ int func_connect_mysql()
 		fprintf(stderr, "%s\n", mysql_error(myconnect));
 		mysql_close(myconnect);
 		return -1;
-	} 
+	}
 	if(!(mysql_set_character_set(myconnect, "utf8"))) {
 		printf("\n  MySQL Server Status: %s", mysql_stat(myconnect));
 		printf("\n  New client character set: %s", mysql_character_set_name(myconnect));
@@ -431,8 +447,8 @@ int func_connect_mysql()
 }
 
 
-/* 
- * Reading data from MySQL (MariaDB) to arrays 
+/*
+ * Reading data from MySQL (MariaDB) to arrays
  */
 int func_read_mysql()
 {
@@ -469,9 +485,9 @@ int func_read_mysql()
 				while((row = mysql_fetch_row(myresult))) {
 					errno = 0;
 					x = (int) strtol(row[0], &endptr, 10);
-					if(errno == ERANGE) 
+					if(errno == ERANGE)
 						perror("\nstrtol");
-					if(row[0] == endptr) 
+					if(row[0] == endptr)
 						fprintf(stderr, "\nNo digits were found");
 					strncpy(array_tags_uniq[x], row[1], WORDS_BUFFER_SIZE - 1);
 					array_tags_uniq[x][WORDS_BUFFER_SIZE - 1] = '\0';
@@ -676,37 +692,37 @@ int func_read_mysql()
 					while((row = mysql_fetch_row(myresult))) {
 						errno = 0;
 						level = (int) strtol(row[0], &endptr, 10);
-						if(errno == ERANGE) 
+						if(errno == ERANGE)
 							perror("\nstrtol");
-						if(row[0] == endptr) 
+						if(row[0] == endptr)
 							fprintf(stderr, "\nNo digits were found");
 
 						errno = 0;
 						node = (int) strtol(row[1], &endptr, 10);
-						if(errno == ERANGE) 
+						if(errno == ERANGE)
 							perror("\nstrtol");
-						if(row[0] == endptr) 
+						if(row[0] == endptr)
 							fprintf(stderr, "\nNo digits were found");
 
 						errno = 0;
 						parent = (int) strtol(row[2], &endptr, 10);
-						if(errno == ERANGE) 
+						if(errno == ERANGE)
 							perror("\nstrtol");
-						if(row[0] == endptr) 
+						if(row[0] == endptr)
 							fprintf(stderr, "\nNo digits were found");
 
 						errno = 0;
 						united = (int) strtol(row[3], &endptr, 10);
-						if(errno == ERANGE) 
+						if(errno == ERANGE)
 							perror("\nstrtol");
-						if(row[0] == endptr) 
+						if(row[0] == endptr)
 							fprintf(stderr, "\nNo digits were found");
 
 						errno = 0;
 						freq = (int) strtol(row[4], &endptr, 10);
-						if(errno == ERANGE) 
+						if(errno == ERANGE)
 							perror("\nstrtol");
-						if(row[0] == endptr) 
+						if(row[0] == endptr)
 							fprintf(stderr, "\nNo digits were found");
 
 						if(level == 1) {
@@ -754,7 +770,7 @@ int func_read_mysql()
 }
 
 
-/* 
+/*
  * Finding search distances for each thread
  */
 int func_find_distances_for_threads()
@@ -795,7 +811,7 @@ int func_find_distances_for_threads()
 }
 
 
-/* 
+/*
  * Finding search distances for each thread united
  */
 int func_find_distances_for_threads_united()
@@ -822,7 +838,7 @@ int func_find_distances_for_threads_united()
 /*
  * Comparison function for strings: char sort[TAGS_UNIQ_ARRAY_SIZE][TAGS_UNIQ_BUFFER_SIZE];
  */
-static inline int func_cmp_strings(const void *a, const void *b) 
+static inline int func_cmp_strings(const void *a, const void *b)
 {
 	return strcmp(a, (const char*) b);
 }
@@ -831,7 +847,7 @@ static inline int func_cmp_strings(const void *a, const void *b)
 /*
  * Comparison function for pointers: char *ptr_words[WORDS_ARRAY_SIZE];
  */
-static inline int func_cmp_strptrs(const void *a, const void *b) 
+static inline int func_cmp_strptrs(const void *a, const void *b)
 {
 	if(DEBUG)
 		printf("\nfunc_cmp_bsearch: a(%p): %s, b(%p): %s", a, (char*) a, b, *(const char**) b);
@@ -842,7 +858,7 @@ static inline int func_cmp_strptrs(const void *a, const void *b)
 /*
  * Comparison function for integers
  */
-static inline int func_cmp_ints(const void *a, const void *b) 
+static inline int func_cmp_ints(const void *a, const void *b)
 {
 	return(*(int*)a - *(int*)b);
 }
@@ -894,7 +910,7 @@ int func_build_ngrams(unsigned int z)
 	strncat(bufout, ",\"ngram\":[", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	t = z;
 
-	
+
 	// TODO: Add tips tags and lemmas
 
 
@@ -1039,7 +1055,7 @@ int func_build_ngrams(unsigned int z)
 
 	// Closing current section
 	strncat(bufout, "},", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	if(DEBUG) 
+	if(DEBUG)
 		printf("\nDEBUG> bufout: %s", bufout);
 
 	// Sending JSON string over socket file
@@ -1140,7 +1156,7 @@ void * func_run_cycle(struct thread_data *thdata)
 						(united_mask[array_ngrams4[0][t]] & 0xFF000000) == (search_types & 0xFF000000) &&		(t = array_ngrams4[2][t]) &&
 						(united_mask[array_ngrams3[0][t]] & 0xFF0000) == (search_types & 0xFF0000) &&			(t = array_ngrams3[2][t]) &&
 						(united_mask[array_ngrams2[0][t]] & 0xFF00) == (search_types & 0xFF00) &&			(t = array_ngrams2[2][t]) &&
-						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF)) 
+						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
 					{
 						if(found_limit) {
 							func_build_ngrams(z);
@@ -1158,8 +1174,8 @@ void * func_run_cycle(struct thread_data *thdata)
 						(united_mask[array_ngrams4[0][t]] & 0xFF000000) == (search_types & 0xFF000000) &&	(t = array_ngrams4[2][t]) &&
 						(united_mask[array_ngrams3[0][t]] & 0xFF0000) == (search_types & 0xFF0000) &&		(t = array_ngrams3[2][t]) &&
 						(united_mask[array_ngrams2[0][t]] & 0xFF00) == (search_types & 0xFF00) && 		(t = array_ngrams2[2][t]) &&
-						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF)) 
-					{ 
+						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
+					{
 						if(found_limit) {
 							func_build_ngrams(z);
 							--found_limit;
@@ -1175,7 +1191,7 @@ void * func_run_cycle(struct thread_data *thdata)
 					if(	(united_mask[array_ngrams4[0][z]] & 0xFF000000) == (search_types & 0xFF000000) &&	(t = array_ngrams4[2][z]) &&
 						(united_mask[array_ngrams3[0][t]] & 0xFF0000) == (search_types & 0xFF0000) &&		(t = array_ngrams3[2][t]) &&
 						(united_mask[array_ngrams2[0][t]] & 0xFF00) == (search_types & 0xFF00) &&		(t = array_ngrams2[2][t]) &&
-						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF)) 
+						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
 					{
 						if(found_limit) {
 							func_build_ngrams(z);
@@ -1191,7 +1207,7 @@ void * func_run_cycle(struct thread_data *thdata)
 				while(z < main_end) {
 					if(	(united_mask[array_ngrams3[0][z]] & 0xFF0000) == (search_types & 0xFF0000) &&	(t = array_ngrams3[2][z]) &&
 						(united_mask[array_ngrams2[0][t]] & 0xFF00) == (search_types & 0xFF00) &&	(t = array_ngrams2[2][t]) &&
-						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF)) 
+						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
 					{
 						if(found_limit) {
 							func_build_ngrams(z);
@@ -1206,7 +1222,7 @@ void * func_run_cycle(struct thread_data *thdata)
 				main_end = NGRAMS2_ARRAY_SIZE;
 				while(z < main_end) {
 					if(	(united_mask[array_ngrams2[0][z]] & 0xFF00) == (search_types & 0xFF00) &&	(t = array_ngrams2[2][z]) &&
-						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF)) 
+						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
 					{
 						if(found_limit) {
 							func_build_ngrams(z);
@@ -1220,7 +1236,7 @@ void * func_run_cycle(struct thread_data *thdata)
 			case 1:
 				main_end = NGRAMS1_ARRAY_SIZE;
 				while(z < main_end) {
-					if(	(united_mask[array_ngrams1[0][z]] & 0xFF) == (search_types & 0xFF)) 
+					if(	(united_mask[array_ngrams1[0][z]] & 0xFF) == (search_types & 0xFF))
 					{
 						if(found_limit) {
 							func_build_ngrams(z);
@@ -1297,7 +1313,7 @@ int func_szWildMatch(const char match[WORDS_BUFFER_SIZE], const int mask_offset,
 	register const char *str, *pat, *s, *p;
 
 	for(unsigned long long i = united_begin; i < united_end; i++) {
-		// Alessandro Felice Cantatore 
+		// Alessandro Felice Cantatore
 		// http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
 		// Warning! You should make *** -> * substitution in PHP (or here somewhere earlier) to work this algorithm correctly
 		// or just uncomment 2 lines below.
@@ -1307,13 +1323,13 @@ int func_szWildMatch(const char match[WORDS_BUFFER_SIZE], const int mask_offset,
 loopStart:
 		for(s = str, p = pat; *s; ++s, ++p) {
 			switch(*p) {
-				case '?': 
+				case '?':
 					// for jumping correctly over UTF-8 character
-					if(*s < 0) { 
+					if(*s < 0) {
 						a = *s;
-						a <<= 1; 
-						while(a < 0) { 
-							a <<= 1; 
+						a <<= 1;
+						while(a < 0) {
+							a <<= 1;
 							++s;
 						}
 					}
@@ -1389,6 +1405,9 @@ void * func_run_united(struct thread_data_united *thdata_united)
 					func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
 				}
 			}
+			if(wildmatch_lemma[x][0]) {
+				func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+			}
 		}
 
 		// Decrementing counter and sending signal to func_run_socket()
@@ -1398,7 +1417,7 @@ void * func_run_united(struct thread_data_united *thdata_united)
 		pthread_cond_signal(&cond2_united);
 		pthread_mutex_unlock(&mutex2_united);
 	} // while(1)
-} 
+}
 
 
 /*
@@ -1406,7 +1425,7 @@ void * func_run_united(struct thread_data_united *thdata_united)
  */
 int func_parse_last_pos()
 {
-	if(DEBUG) 
+	if(DEBUG)
 		printf("\nLast positions for threads:");
 	int x = 0;
 	int y = 0;
@@ -1435,8 +1454,8 @@ int func_parse_last_pos()
 			z++;
 		}
 	} while(y < WORDS_BUFFER_SIZE && z < SEARCH_THREADS && morph_last_pos[y++]);
-	if(DEBUG) 
-		for(x = 0; x < SEARCH_THREADS; x++) 
+	if(DEBUG)
+		for(x = 0; x < SEARCH_THREADS; x++)
 			printf("\n  %d: %llu", x, thread_data_array[x].last_pos);
 	return 0;
 }
@@ -1451,7 +1470,7 @@ int func_fill_search_mask()
 	morph_types = 0;
 
 	// Calculate amount of params (words) to search
-	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0])) {
+	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0] || wildmatch_lemma[params][0])) {
 		++params;
 	}
 
@@ -1467,6 +1486,8 @@ int func_fill_search_mask()
 			morph_types += ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * x + TAGS));
 		if(wildmatch[x][0])
 			morph_types += ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * x + WILD));
+		if(wildmatch_lemma[x][0])
+			morph_types += ((unsigned long long)1 << (SEARCH_TYPES_OFFSET * x + WILD_LEMMA));
 	}
 	if(DEBUG)
 		printf("\nmorph_types: %llu\n", morph_types);
@@ -1498,7 +1519,7 @@ int func_validate_distances()
 			dist_from[x] = dist_to[x];
 			dist_to[x] = temp;
 		}
-	
+
 		if(DEBUG)
 			printf("\n  #%d: from %d to %d", x + 1, dist_from[x], dist_to[x]);
 	}
@@ -1511,7 +1532,7 @@ int func_validate_distances()
  * 	netstat -ap unix |grep fastmorph.socket
  * 	ncat -U /tmp/fastmorph.socket
  */
-void * func_run_socket(/*int argc, char *argv[]*/) 
+void * func_run_socket(/*int argc, char *argv[]*/)
 {
 	printf("\n  Begin of socket listening:\n");
 	unsigned int t;
@@ -1541,7 +1562,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 		exit(-1);
 	}
 	// Giving permissions to all processes to access the socket file
-	chmod(socket_path, 0666); 
+	chmod(socket_path, 0666);
 
 	if(listen(fd, 5) == -1) {
 		perror("Listen error");
@@ -1596,7 +1617,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 
 			// Set the initial value of counters
 			found_limit = return_ngrams;
-			
+
 			time_start(&tv2);
 			// Find ids and set masks for all search words, lemmas, tags and patterns
 			for(t = 0; t < params; t++) {
@@ -1725,7 +1746,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 		printf("\n  Thread: completed join with thread united #%d having a status of '%s'", t, strerror(rc_thread_united[t]));
 	}
 	close(fd);
-	unlink(socket_path);	
+	unlink(socket_path);
 	pthread_exit(NULL);
 }
 
@@ -1738,9 +1759,10 @@ int prompt()
 	printf("\n\nEnter 'version' or 'exit': ");
 	char *buffer = NULL;
 	do {
-		scanf("%ms", &buffer);
-		if(strstr(buffer, "version") != NULL) {
-			printf("%s\n", VERSION);
+		if(scanf("%ms", &buffer)) {
+			if(strstr(buffer, "version") != NULL) {
+				printf("%s\n", VERSION);
+			}
 		}
 	} while(strstr(buffer, "exit") == NULL && strstr(buffer, "quit") == NULL);
 	return 0;
