@@ -11,7 +11,7 @@
 #ifndef FASTNGRAMS_H
 #define FASTNGRAMS_H
 
-#define VERSION				"Version v5.5.0 - 2018.02.08"		/*   Version and date								*/
+#define VERSION				"Version v5.6.0 - 2018.02.18"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
 #define WORD				0					/*   id of words								*/

@@ -11,7 +11,7 @@
 #ifndef FASTMORPH_H
 #define FASTMORPH_H
 
-#define VERSION				"Version v5.5.0 - 2018.02.08"		/*   Version and date								*/
+#define VERSION				"Version v5.6.0 - 2018.02.18"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
 #define WORD				0					/*   id of words								*/
@@ -42,6 +42,8 @@
 #define SOCKET_BUFFER_SIZE		10240					/*   Size of input and output buffers for socket				*/
 #define SEARCH_THREADS			4					/*   Threads count to perform search: depends on CPU cores			*/
 #define AMOUNT_TOKENS			6					/*   Max amount of words to search						*/
+#define EXTEND_RANGE_MAX		10					/*   Max limit for expanding context						*/
+#define EXTEND_RANGE_DEFAULT		2					/*   Default value for expanding context					*/
 
 // HTML tags for highlighting words
 #define FOUND_HTML_OPEN		"<span id='found_word_%d' class='found_word' title='(%s%s) %s'>"	/*   escaping '\' if lemma is '"', lemma utself, tag	*/

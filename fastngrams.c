@@ -1,6 +1,6 @@
 /*
  * fastngrams.c - Fast search engine for n-grams.
- * Version v5.5.0 - 2018.02.08
+ * Version v5.6.0 - 2018.02.18
  *
  * "fastngrams" is a high speed search engine for n-grams:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -28,6 +28,8 @@
 #include <mysql/mysql.h>	/*   MySQL and MariaDB	   */
 #include "jsmn-master/jsmn.h"	/*   JSON		   */
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
+#include <locale.h>		/*   for regcomp, regexec  */
+#include <regex.h>		/*   regcomp, regexec	   */
 
 #include "fastngrams.h"
 #include "credentials.h"	/*   DB login, password... */
@@ -158,10 +160,9 @@ unsigned long long morph_types;						/*   Bits with search data   */
 unsigned int case_sensitive[AMOUNT_TOKENS];				/*   Array for case sensitive (1) or not (0)   */
 char morph_last_pos[WORDS_BUFFER_SIZE];					/*   The id of last found token to continue from   */
 unsigned int return_ngrams;						/*   Number of sentences to return   */
-
 //unsigned int search_mode;						/*   n   */
-
 unsigned int params;							/*   Number of tokens (1-6) to search   */
+unsigned int regex;							/*   Is regex mode enabled: 1 or 0   */
 
 // Mutexes and conditions for pthread_cond_wait()
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -415,6 +416,20 @@ int func_jsmn_json(char *strin, int len)
 			strncpy(morph_last_pos, strin + t[i+1].start, t[i+1].end - t[i+1].start);
 			morph_last_pos[t[i+1].end - t[i+1].start] = '\0';
 			printf("%s\n", morph_last_pos);
+			++i;
+		// Regex (Is regex mode enabled?)
+		} else if(jsoneq(strin, &t[i], "regex") == 0) {
+			printf("- regex: %.*s / ", t[i+1].end - t[i+1].start, strin + t[i+1].start);
+			strncpy(buf, strin + t[i+1].start, t[i+1].end - t[i+1].start);
+			buf[t[i+1].end - t[i+1].start] = '\0';
+			errno = 0;
+			regex = strtol(buf, &ptr, 10);
+			// Check for various possible errors
+			if(errno == ERANGE)
+				perror("\nstrtol");
+			if(ptr == buf)
+				fprintf(stderr, "\nNo digits were found");
+			printf("%d\n", regex);
 			++i;
 		// Not recognized
 		} else {
@@ -1299,6 +1314,55 @@ int func_sort_tags(char *tags)
 
 
 /*
+ * RegEx
+ */
+int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type, struct thread_data_united *thdata_united)
+{
+	// Setting search distances for current (by each) thread
+	const unsigned long long united_begin = thdata_united->start;
+	register const unsigned long long united_end = thdata_united->finish;
+	regex_t start_state;
+
+	//if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // TODO: Case sensitive
+	if(regcomp(&start_state, pattern, REG_EXTENDED)) {
+		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
+		return 1;
+	}
+	for(unsigned long long i = united_begin; i < united_end; i++) {
+		if(!regexec(&start_state, united_x[i], 0, NULL, 0)) {
+			united_mask[i] += (unsigned long long)1 << (SEARCH_TYPES_OFFSET * mask_offset + type);
+			if(DEBUG)
+				printf("RegEx #%lld: %s (wordform: %s)\n", i, united_x[i], united_words[i]);
+		}
+	}
+	regfree(&start_state);
+	return 0;
+}
+
+
+/*
+ * RegEx normalization \\ -> \ because JSON needs double backslash
+ */
+int func_regex_normalization(const char match[WORDS_BUFFER_SIZE])
+{
+/*
+	char pattern[WORDS_BUFFER_SIZE];
+	for(int x = 0; x < WORDS_BUFFER_SIZE; x++) {
+		switch(match[x]) {
+			case '\\':
+				continue;
+			default:
+				pattern[x] = match[x];
+				continue;
+		}
+	}
+	printf("\nRegEx: %s -> %s", match, pattern);
+*/
+	return 0;
+}
+
+
+/*
  * Advanced pattern matching (*?) search
  */
 int func_szWildMatch(const char match[WORDS_BUFFER_SIZE], const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type, struct thread_data_united *thdata_united)
@@ -1398,6 +1462,7 @@ void * func_run_united(struct thread_data_united *thdata_united)
 				//func_sort_tags(tags[x]);
 				func_szWildMatch(tags[x], x, united_tags, TAGS, thdata_united);
 			}
+			/*
 			if(wildmatch[x][0]) {
 				if(case_sensitive[x]) {
 					func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
@@ -1407,6 +1472,26 @@ void * func_run_united(struct thread_data_united *thdata_united)
 			}
 			if(wildmatch_lemma[x][0]) {
 				func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+			}
+			*/
+			if(wildmatch[x][0]) {
+				if(case_sensitive[x]) {
+					if(regex)
+						func_regex(wildmatch[x], x, united_words_case, WILD, thdata_united);
+					else
+						func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
+				} else {
+					if(regex)
+						func_regex(wildmatch[x], x, united_words, WILD, thdata_united);
+					else
+						func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
+				}
+			}
+			if(wildmatch_lemma[x][0]) {
+				if(regex)
+					func_regex(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+				else
+					func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
 			}
 		}
 
@@ -1774,6 +1859,9 @@ int prompt()
  */
 int main(/* int argc, char *argv[] */)
 {
+	// set locale for regex functions
+	setlocale(LC_ALL, "ru_RU.UTF-8");
+
 	// main big array
 	//array_united = malloc(sizeof(*array_united) * SIZE_ARRAY_MAIN);
 

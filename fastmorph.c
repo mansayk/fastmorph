@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.5.0 - 2018.02.08
+ * Version v5.6.0 - 2018.02.18
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -28,6 +28,8 @@
 #include <mysql/mysql.h>	/*   MySQL and MariaDB	   */
 #include "jsmn-master/jsmn.h"	/*   JSON		   */
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
+#include <locale.h>		/*   for regcomp, regexec  */
+#include <regex.h>		/*   regcomp, regexec	   */
 
 #include "fastmorph.h"
 #include "credentials.h"	/*   DB login, password... */
@@ -145,6 +147,9 @@ unsigned int case_sensitive[AMOUNT_TOKENS];				/*   Array for case sensitive (1)
 char morph_last_pos[WORDS_BUFFER_SIZE];					/*   The id of last found token to continue from   */
 unsigned int return_sentences;						/*   Number of sentences to return   */
 unsigned int params;							/*   Number of tokens (1-5) to search   */
+unsigned int regex;							/*   Is regex mode enabled: 1 or 0   */
+unsigned int extend_range;						/*   Range for extending context   */
+int extend;								/*   Sentence id for extending context   */
 
 // Mutexes and conditions for pthread_cond_wait()
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -398,6 +403,56 @@ int func_jsmn_json(char *strin, int len)
 			strncpy(morph_last_pos, strin + t[i+1].start, t[i+1].end - t[i+1].start);
 			morph_last_pos[t[i+1].end - t[i+1].start] = '\0';
 			printf("%s\n", morph_last_pos);
+			++i;
+		// Regex (Is regex mode enabled?)
+		} else if(jsoneq(strin, &t[i], "regex") == 0) {
+			printf("- regex: %.*s / ", t[i+1].end - t[i+1].start, strin + t[i+1].start);
+			strncpy(buf, strin + t[i+1].start, t[i+1].end - t[i+1].start);
+			buf[t[i+1].end - t[i+1].start] = '\0';
+			errno = 0;
+			regex = strtol(buf, &ptr, 10);
+			// Check for various possible errors
+			if(errno == ERANGE)
+				perror("\nstrtol");
+			if(ptr == buf)
+				fprintf(stderr, "\nNo digits were found");
+			printf("%d\n", regex);
+			++i;
+		// Extend context
+		} else if(jsoneq(strin, &t[i], "extend") == 0) {
+			printf("- extend: %.*s / ", t[i+1].end - t[i+1].start, strin + t[i+1].start);
+			strncpy(buf, strin + t[i+1].start, t[i+1].end - t[i+1].start);
+			buf[t[i+1].end - t[i+1].start] = '\0';
+			errno = 0;
+			extend = strtol(buf, &ptr, 10);
+			// Check for ranges
+			if(extend < -1 || extend >= SIZE_ARRAY_MAIN) {
+				extend = -1;
+			}
+			// Check for various possible errors
+			if(errno == ERANGE)
+				perror("\nstrtol");
+			if(ptr == buf)
+				fprintf(stderr, "\nNo digits were found");
+			printf("%d\n", extend);
+			++i;
+		// Extend context range
+		} else if(jsoneq(strin, &t[i], "extend_range") == 0) {
+			printf("- extend_range: %.*s / ", t[i+1].end - t[i+1].start, strin + t[i+1].start);
+			strncpy(buf, strin + t[i+1].start, t[i+1].end - t[i+1].start);
+			buf[t[i+1].end - t[i+1].start] = '\0';
+			errno = 0;
+			extend_range = strtol(buf, &ptr, 10);
+			// Check for ranges
+			if(/*extend_range < 0 ||*/ extend_range >= EXTEND_RANGE_MAX) {
+				extend_range = EXTEND_RANGE_DEFAULT;
+			}
+			// Check for various possible errors
+			if(errno == ERANGE)
+				perror("\nstrtol");
+			if(ptr == buf)
+				fprintf(stderr, "\nNo digits were found");
+			printf("%d\n", extend_range);
 			++i;
 		// Not recognized
 		} else {
@@ -755,13 +810,13 @@ int func_read_mysql()
 						if(row[0] == endptr)
 							fprintf(stderr, "\nNo digits were found");
 
-						if(source_last != source_curnt) {
+						if(i == 0 || source_last != source_curnt) {
 							array_united[i] = INT_MIN; // TODO: text beginning marker ( < SOURCE_OFFSET) and subcorpora mask
 							++i;
 							source_last = source_curnt;
+							sent_last = -1;
 						}
-
-						if(sent_last == sent_curnt) {
+						if(i != 0 && sent_last == sent_curnt) {
 							errno = 0;
 							array_united[i] = (int) strtol(row[0], &endptr, 10);
 							if(errno == ERANGE)
@@ -826,7 +881,6 @@ int func_find_distances_for_threads()
 			}
 			--thread_data_array[x].finish;
 		}
-
 		// sentences
 		thread_data_array[x].first_sentence = sentence;
 		y = thread_data_array[x].start;
@@ -905,6 +959,7 @@ int func_build_sents(unsigned int end, unsigned int curnt_sent, unsigned long lo
 	int lspace = 1;
 	int rspace = 1;
 	int quote_open = 0;
+	//char bufout[SOCKET_BUFFER_SIZE];
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
 
@@ -1205,18 +1260,13 @@ void * func_run_cycle(struct thread_data *thdata)
 			positive = array_united[z1];
 			if(positive < 0) {
 				// TODO: it will be id of source_mask to check if this text is selected (subcorpora)
+				if(z1) 
+					++curnt_sent;
 				if(positive <= SOURCE_OFFSET)
 					positive = -array_united[++z1];
 				else
 					positive = -positive;
 				sent_begin = z1;
-				++curnt_sent;
-			}
-			if(DEBUG) {
-				if(z1 < 10) {
-					printf("\nz1=%lld, positive=%d, last_pos=%lld, curnt_sent=%d, sent_begin=%lld, found_limit=%d", z1, positive, last_pos, curnt_sent, sent_begin, found_limit);
-					printf("\t(%lld==%lld)", united_mask[positive] & 0xFF, search_types & 0xFF);
-				}
 			}
 			if((united_mask[positive] & 0xFF) == (search_types & 0xFF)) {
 				// param2
@@ -1249,7 +1299,6 @@ void * func_run_cycle(struct thread_data *thdata)
 																	x6 = z5 + dist5_end;
 																	while(z6 < main_end && z6 <= x6 && array_united[z6] >= 0) {
 																		if((united_mask[array_united[z6]] & 0xFF0000000000) == (search_types & 0xFF0000000000)) {
-																			//if(z1 > last_pos && found_limit) {
 																			if((z1 > last_pos || !last_pos) && found_limit) {
 																				sem_wait(&count_sem);
 																				if(found_limit) {
@@ -1269,7 +1318,6 @@ void * func_run_cycle(struct thread_data *thdata)
 																		++z6;
 																	}
 																} else {
-																	//if(z1 > last_pos && found_limit) {
 																	if((z1 > last_pos || !last_pos) && found_limit) {
 																		sem_wait(&count_sem);
 																		if(found_limit) {
@@ -1290,7 +1338,6 @@ void * func_run_cycle(struct thread_data *thdata)
 															++z5;
 														}
 													} else {
-														//if(z1 > last_pos && found_limit) {
 														if((z1 > last_pos || !last_pos) && found_limit) {
 															sem_wait(&count_sem);
 															if(found_limit) {
@@ -1311,7 +1358,6 @@ void * func_run_cycle(struct thread_data *thdata)
 												++z4;
 											}
 										} else {
-											//if(z1 > last_pos && found_limit) {
 											if((z1 > last_pos || !last_pos) && found_limit) {
 												sem_wait(&count_sem);
 												if(found_limit) {
@@ -1332,7 +1378,6 @@ void * func_run_cycle(struct thread_data *thdata)
 									++z3;
 								}
 							} else {
-								//if(z1 > last_pos && found_limit) {
 								if((z1 > last_pos || !last_pos) && found_limit) {
 									sem_wait(&count_sem);
 									if(found_limit) {
@@ -1353,8 +1398,6 @@ void * func_run_cycle(struct thread_data *thdata)
 						++z2;
 					}
 				} else {
-					//if(z1 > last_pos && found_limit) {
-					//if((z1 > last_pos || z1 == main_begin) && found_limit) {
 					if((z1 > last_pos || !last_pos) && found_limit) {
 						sem_wait(&count_sem);
 						if(found_limit) {
@@ -1391,6 +1434,47 @@ void * func_run_cycle(struct thread_data *thdata)
 
 
 /*
+ * Expand context
+ */
+int func_extend_context(unsigned int extend_sent)
+{
+	register unsigned long long z1 = 0;
+	register unsigned int curnt_sent = 0;
+	register unsigned int extend_min;
+	register unsigned int extend_max;
+	register const unsigned long long main_end = SIZE_ARRAY_MAIN;
+
+	// Make sure we are not out of range 
+	if(extend_sent < extend_range)
+		extend_min = 0;
+	else
+		extend_min = extend_sent - extend_range;
+	
+	if(extend_sent + extend_range > AMOUNT_SENTENCES)
+		extend_max = AMOUNT_SENTENCES;
+	else
+		extend_max = extend_sent + extend_range;
+
+	while(z1 < main_end) {
+		if(array_united[z1] < 0) {
+			if(array_united[z1] <= SOURCE_OFFSET) {
+				++z1;
+			}
+			if(curnt_sent >= extend_min) {
+				if(curnt_sent <= extend_max)
+					func_build_sents(SIZE_ARRAY_MAIN, curnt_sent, z1, -1, -1, -1, -1, -1, -1);
+				else
+					break;
+			}
+			++curnt_sent;
+		}
+		++z1;
+	}
+	return 0;
+}
+
+
+/*
  * Sort tags in the string
  */
 int func_sort_tags(char *tags)
@@ -1416,6 +1500,55 @@ int func_sort_tags(char *tags)
 		strncat(tags, "*", SOCKET_BUFFER_SIZE - strlen(tags) - 1);
 	}
 	printf("  =>  %s", tags);
+	return 0;
+}
+
+
+/*
+ * RegEx
+ */
+int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type, struct thread_data_united *thdata_united)
+{
+	// Setting search distances for current (by each) thread
+	const unsigned long long united_begin = thdata_united->start;
+	register const unsigned long long united_end = thdata_united->finish;
+	regex_t start_state;
+
+	//if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // TODO: Case sensitive
+	if(regcomp(&start_state, pattern, REG_EXTENDED)) {
+		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
+		return 1;
+	}
+	for(unsigned long long i = united_begin; i < united_end; i++) {
+		if(!regexec(&start_state, united_x[i], 0, NULL, 0)) {
+			united_mask[i] += (unsigned long long)1 << (SEARCH_TYPES_OFFSET * mask_offset + type);
+			if(DEBUG)
+				printf("RegEx #%lld: %s (wordform: %s)\n", i, united_x[i], united_words[i]);
+		}
+	}
+	regfree(&start_state);
+	return 0;
+}
+
+
+/*
+ * RegEx normalization \\ -> \ because JSON needs double backslash
+ */
+int func_regex_normalization(const char match[WORDS_BUFFER_SIZE])
+{
+/*
+	char pattern[WORDS_BUFFER_SIZE];
+	for(int x = 0; x < WORDS_BUFFER_SIZE; x++) {
+		switch(match[x]) {
+			case '\\':
+				continue;
+			default:
+				pattern[x] = match[x];
+				continue;
+		}
+	}
+	printf("\nRegEx: %s -> %s", match, pattern);
+*/
 	return 0;
 }
 
@@ -1520,15 +1653,49 @@ void * func_run_united(struct thread_data_united *thdata_united)
 				//func_sort_tags(tags[x]);
 				func_szWildMatch(tags[x], x, united_tags, TAGS, thdata_united);
 			}
+			/*
+			if(regex) {
+				if(wildmatch[x][0]) {
+					if(case_sensitive[x]) {
+						func_regex(wildmatch[x], x, united_words_case, WILD, thdata_united);
+					} else {
+						func_regex(wildmatch[x], x, united_words, WILD, thdata_united);
+					}
+				}
+				if(wildmatch_lemma[x][0]) {
+					func_regex(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+				}
+			} else {
+				if(wildmatch[x][0]) {
+					if(case_sensitive[x]) {
+						func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
+					} else {
+						func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
+					}
+				}
+				if(wildmatch_lemma[x][0]) {
+					func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+				}
+			}
+			*/
 			if(wildmatch[x][0]) {
 				if(case_sensitive[x]) {
-					func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
+					if(regex)
+						func_regex(wildmatch[x], x, united_words_case, WILD, thdata_united);
+					else
+						func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
 				} else {
-					func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
+					if(regex)
+						func_regex(wildmatch[x], x, united_words, WILD, thdata_united);
+					else
+						func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
 				}
 			}
 			if(wildmatch_lemma[x][0]) {
-				func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+				if(regex)
+					func_regex(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
+				else
+					func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
 			}
 		}
 
@@ -1728,104 +1895,132 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			printf("\n-----------------------------------------------------------------");
 			printf("\nRead %u bytes: %.*s\n", rc, rc, bufin);
 
-			// Preparing arrays
-			memset(united_mask, 0, sizeof(united_mask));
-
 			// Parsing incoming JSON string and setting global variables
 			func_jsmn_json(bufin, rc);
-			func_fill_search_mask();
-			func_parse_last_pos();
-			func_validate_distances();
 
-			// Set the initial value of counters
-			found_limit = return_sentences;
+			if(extend >= 0) {
+				// Sending JSON string over socket file
+				strncpy(bufout, "{\"example\":[", SOCKET_BUFFER_SIZE - 1);
+				bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
+				if(write(cl, bufout, strlen(bufout)) != (unsigned int) strlen(bufout)) {
+					if(rc > 0) {
+						fprintf(stderr,"Partial write");
+					} else {
+						perror("Write error");
+						exit(-1);
+					}
+				}
+				bufout[0] = '\0';
 
-			time_start(&tv2);
-			// Find ids and set masks for all search words, lemmas, tags and patterns
-			for(t = 0; t < params; t++) {
-				if(word[t][0]) {
-					if(case_sensitive[t])
-						func_szExactMatch(ptr_words_case, word[t], WORDS_CASE_ARRAY_SIZE, t, united_words_case, WORD);
+				func_extend_context(extend);
+
+				// closing marker
+				strncpy(bufout, "{\"id\":-1}", SOCKET_BUFFER_SIZE - 1);
+				bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
+
+				strncat(bufout, "]", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+
+				// Clear for the next request
+				extend = -1;
+			} else {
+				// Preparing arrays
+				memset(united_mask, 0, sizeof(united_mask));
+
+				// Setting global variables
+				func_fill_search_mask();
+				func_parse_last_pos();
+				func_validate_distances();
+
+				// Set the initial value of counters
+				found_limit = return_sentences;
+
+				time_start(&tv2);
+				// Find ids and set masks for all search words, lemmas, tags and patterns
+				for(t = 0; t < params; t++) {
+					if(word[t][0]) {
+						if(case_sensitive[t])
+							func_szExactMatch(ptr_words_case, word[t], WORDS_CASE_ARRAY_SIZE, t, united_words_case, WORD);
+						else
+							func_szExactMatch(ptr_words, word[t], WORDS_ARRAY_SIZE, t, united_words, WORD);
+					}
+					if(lemma[t][0])
+						func_szExactMatch(ptr_lemmas, lemma[t], LEMMAS_ARRAY_SIZE, t, united_lemmas, LEMMA);
+					if(tags[t][0])
+						func_sort_tags(tags[t]);
+				}
+				printf("\n\nszExactMatch() time: %ld milliseconds.", time_stop(&tv2));
+
+				time_start(&tv3);
+				// broadcast to workers to work
+				pthread_mutex_lock(&mutex_united);
+				finished_united = SEARCH_THREADS;
+				pthread_cond_broadcast(&cond_united);
+				pthread_mutex_unlock(&mutex_united);
+				// wait for workers to finish
+				pthread_mutex_lock(&mutex2_united);
+				while(finished_united)
+					pthread_cond_wait(&cond2_united, &mutex2_united);
+				pthread_mutex_unlock(&mutex2_united);
+				printf("\nThreads func_run_united time: %ld milliseconds.", time_stop(&tv3));
+
+				// Sending JSON string over socket file
+				strncpy(bufout, "{\"example\":[", SOCKET_BUFFER_SIZE - 1);
+				bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
+				if(write(cl, bufout, strlen(bufout)) != (unsigned int) strlen(bufout)) {
+					if(rc > 0) {
+						fprintf(stderr,"Partial write");
+					} else {
+						perror("Write error");
+						exit(-1);
+					}
+				}
+
+				time_start(&tv4);
+				// broadcast to workers to work
+				pthread_mutex_lock(&mutex);
+				finished = SEARCH_THREADS;
+				pthread_cond_broadcast(&cond);
+				pthread_mutex_unlock(&mutex);
+				// wait for workers to finish
+				pthread_mutex_lock(&mutex2);
+				while(finished)
+					pthread_cond_wait(&cond2, &mutex2);
+				pthread_mutex_unlock(&mutex2);
+				printf("\nThreads func_run_cycle time: %ld milliseconds.", time_stop(&tv4));
+
+				// Summ amount of found occurences and left ones from all threads
+				progress = 0;
+				size_array_found_sents_all_summ = 0;
+				for(t = 0; t < SEARCH_THREADS; t++) {
+					progress += thread_data_array[t].progress;
+					size_array_found_sents_all_summ += thread_data_array[t].found_num;
+				}
+
+				// closing marker
+				strncpy(bufout, "{\"id\":-1}", SOCKET_BUFFER_SIZE - 1);
+				bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
+
+				// last_pos
+				strncat(bufout, "],\"last_pos\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+				for(t = 0; t < SEARCH_THREADS; t++) {
+					if(t != SEARCH_THREADS - 1)
+						snprintf(temp, 100, "%llux", thread_data_array[t].last_pos);
 					else
-						func_szExactMatch(ptr_words, word[t], WORDS_ARRAY_SIZE, t, united_words, WORD);
+						snprintf(temp, 100, "%llu", thread_data_array[t].last_pos);
+					strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 				}
-				if(lemma[t][0])
-					func_szExactMatch(ptr_lemmas, lemma[t], LEMMAS_ARRAY_SIZE, t, united_lemmas, LEMMA);
-				if(tags[t][0])
-					func_sort_tags(tags[t]);
-			}
-			printf("\n\nszExactMatch() time: %ld milliseconds.", time_stop(&tv2));
+				strncat(bufout, "\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
-			time_start(&tv3);
-			// broadcast to workers to work
-			pthread_mutex_lock(&mutex_united);
-			finished_united = SEARCH_THREADS;
-			pthread_cond_broadcast(&cond_united);
-			pthread_mutex_unlock(&mutex_united);
-			// wait for workers to finish
-			pthread_mutex_lock(&mutex2_united);
-			while(finished_united)
-				pthread_cond_wait(&cond2_united, &mutex2_united);
-			pthread_mutex_unlock(&mutex2_united);
-			printf("\nThreads func_run_united time: %ld milliseconds.", time_stop(&tv3));
+				// found_all
+				strncat(bufout, ",\"found_all\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+				snprintf(temp, 100, "%d", size_array_found_sents_all_summ);
+				strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
-			// Sending JSON string over socket file
-			strncpy(bufout, "{\"example\":[", SOCKET_BUFFER_SIZE - 1);
-			bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
-			if(write(cl, bufout, strlen(bufout)) != (unsigned int) strlen(bufout)) {
-				if(rc > 0) {
-					fprintf(stderr,"Partial write");
-				} else {
-					perror("Write error");
-					exit(-1);
-				}
-			}
-
-			time_start(&tv4);
-			// broadcast to workers to work
-			pthread_mutex_lock(&mutex);
-			finished = SEARCH_THREADS;
-			pthread_cond_broadcast(&cond);
-			pthread_mutex_unlock(&mutex);
-			// wait for workers to finish
-			pthread_mutex_lock(&mutex2);
-			while(finished)
-				pthread_cond_wait(&cond2, &mutex2);
-			pthread_mutex_unlock(&mutex2);
-			printf("\nThreads func_run_cycle time: %ld milliseconds.", time_stop(&tv4));
-
-			// Summ amount of found occurences and left ones from all threads
-			progress = 0;
-			size_array_found_sents_all_summ = 0;
-			for(t = 0; t < SEARCH_THREADS; t++) {
-				progress += thread_data_array[t].progress;
-				size_array_found_sents_all_summ += thread_data_array[t].found_num;
-			}
-
-			// closing marker
-			strncpy(bufout, "{\"id\":-1}", SOCKET_BUFFER_SIZE - 1);
-			bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
-
-			// last_pos
-			strncat(bufout, "],\"last_pos\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-			for(t = 0; t < SEARCH_THREADS; t++) {
-				if(t != SEARCH_THREADS - 1)
-					snprintf(temp, 100, "%llux", thread_data_array[t].last_pos);
-				else
-					snprintf(temp, 100, "%llu", thread_data_array[t].last_pos);
+				// progress
+				strncat(bufout, ",\"progress\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
+				snprintf(temp, 100, "%d", progress);
 				strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 			}
-			strncat(bufout, "\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-
-			// found_all
-			strncat(bufout, ",\"found_all\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-			snprintf(temp, 100, "%d", size_array_found_sents_all_summ);
-			strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-
-			// progress
-			strncat(bufout, ",\"progress\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-			snprintf(temp, 100, "%d", progress);
-			strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
 			// close JSON string
 			strncat(bufout, "}\r\n", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
@@ -1896,6 +2091,12 @@ int prompt()
  */
 int main(/* int argc, char *argv[] */)
 {
+	// set locale for regex functions
+	setlocale(LC_ALL, "ru_RU.UTF-8");
+
+	// initial values
+	extend = -1;
+
 	// main big array
 	array_united = malloc(sizeof(*array_united) * SIZE_ARRAY_MAIN);
 
@@ -2023,6 +2224,10 @@ int main(/* int argc, char *argv[] */)
 
 	sem_init(&count_sem, 0, 1);
 
+	// Sentence-source compliance test for Written Corpus... Correct: 260 == 0, 261 == 1 
+	//for(int m = 259; m <= 262; m++)
+	//	printf(">>>> %d <> %d", m, sentence_source[m]);
+
 	// run func_run_socket() in a thread
 	printf("\n\nCreating socket listening thread...");
 	pthread_t thread; // thread identifier
@@ -2047,3 +2252,4 @@ int main(/* int argc, char *argv[] */)
 	free(list_tags);
 	return 0;
 }
+
