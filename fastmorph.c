@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.6.0 - 2018.02.18
+ * Version v5.6.1 - 2018.03.25
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -75,8 +75,8 @@ int size_list_lemmas;
 char *list_tags;							/*   Long string for tags   */
 int size_list_tags;
 
-//char *list_sources;							/*   Long string for sources   */
-//int size_list_sources;
+char *list_sources;							/*   Long string for sources   */
+int size_list_sources;
 
 char *list_sources_author;						/*   Long string for sources authors   */
 int size_list_sources_author;
@@ -92,15 +92,13 @@ int size_list_sources_genre;
 
 //char source_types[SOURCES_ARRAY_SIZE][SOURCE_TYPES_BUFFER_SIZE];	/*   source types: book, www...com   */
 
-int source_mask[SOURCES_ARRAY_SIZE][3];					/*   TODO: For subcorpora. Texts: bitmask, begin, end   */
-
-int sentence_source[AMOUNT_SENTENCES];					/*   Sentence-source associations   */
+int sentence_source[AMOUNT_SENTENCES];					/*   Sentence-source associations. TODO: remove this (40Mb of RAM) and make through source in main array!   */
 
 char *ptr_words_case[WORDS_CASE_ARRAY_SIZE];				/*   Array of pointers to list_words_case elements   */
 char *ptr_words[WORDS_ARRAY_SIZE];					/*   Array of pointers...   */
 char *ptr_lemmas[WORDS_ARRAY_SIZE];					/*   Array of pointers...   */
 char *ptr_tags[TAGS_ARRAY_SIZE];					/*   Array of pointers...   */
-//char *ptr_sources[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
+char *ptr_sources[SOURCES_ARRAY_SIZE];					/*   Array of pointers...   */
 char *ptr_sources_author[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 char *ptr_sources_title[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
 char *ptr_sources_date[SOURCES_ARRAY_SIZE];				/*   Array of pointers...   */
@@ -112,12 +110,16 @@ char word[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кешегә
 char lemma[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: кеше, еш, теш   */
 char tags[AMOUNT_TOKENS][WORDS_BUFFER_SIZE];				/*   search string: *<n>*<nom>*<pl>*   */
 
+char source[SOURCE_BUFFER_SIZE];					/*   search string for sources: (*еш*) -> еш (кеше, ешрак, теш)   */
+
 char *united_words_case[UNITED_ARRAY_SIZE];				/*   Array of not uniq pointers to list_words_case elements   */
 char *united_words[UNITED_ARRAY_SIZE];					/*   Array of not uniq pointers   */
 char *united_lemmas[UNITED_ARRAY_SIZE];					/*   Array of not uniq pointers   */
 char *united_tags[UNITED_ARRAY_SIZE];					/*   Array of not uniq pointers   */
 
 unsigned long long united_mask[UNITED_ARRAY_SIZE];			/*   Array of bits fields   */
+
+unsigned int source_mask[SOURCES_ARRAY_SIZE];				/*   For search in subcorpora and particular texts (bitmask)   */
 
 unsigned int dist_from[AMOUNT_TOKENS];					/*   search distances to the next word   */
 unsigned int dist_to[AMOUNT_TOKENS];
@@ -143,6 +145,7 @@ struct thread_data_united thread_data_array_united[SEARCH_THREADS];
 unsigned int size_array_found_sents_all_summ;				/*   For statistics: ...found all summary...   */
 
 unsigned long long morph_types;						/*   Bits with search data   */
+unsigned int morph_types_source;					/*   Bits with search data for sources   */
 unsigned int case_sensitive[AMOUNT_TOKENS];				/*   Array for case sensitive (1) or not (0)   */
 char morph_last_pos[WORDS_BUFFER_SIZE];					/*   The id of last found token to continue from   */
 unsigned int return_sentences;						/*   Number of sentences to return   */
@@ -238,8 +241,15 @@ int func_jsmn_json(char *strin, int len)
 
 	/* Loop over all keys of the root object */
 	for (i = 1; i < r; i++) {
+		// Source for search
+		if(jsoneq(strin, &t[i], "source") == 0) {
+			printf("- source: %.*s / ", t[i+1].end - t[i+1].start, strin + t[i+1].start);
+			strncpy(source, strin + t[i+1].start, t[i+1].end - t[i+1].start);
+			source[t[i+1].end - t[i+1].start] = '\0';
+			printf("%s\n", source);
+			++i;
 		// Words
-		if(jsoneq(strin, &t[i], "word") == 0) {
+		} else if(jsoneq(strin, &t[i], "word") == 0) {
 			errno = 0;
 			printf("- word[_]:\n");
 			if(t[i+1].type != JSMN_ARRAY) {
@@ -704,7 +714,7 @@ int func_read_mysql()
 		// load sources
 		printf("\n    Sources: getting list...");
 		fflush(stdout);
-		//ptr = list_sources;
+		ptr = list_sources;
 		ptr_author = list_sources_author;
 		ptr_title = list_sources_title;
 		ptr_date = list_sources_date;
@@ -717,7 +727,7 @@ int func_read_mysql()
 				printf("\n***ERROR: MySQL - problem in 'myresult'!\n");
 				exit(-1);
 			} else {
-				//i = 0;
+				i = 0;
 				iauthor = 0;
 				ititle = 0;
 				idate = 0;
@@ -725,15 +735,15 @@ int func_read_mysql()
 				printf("\33[2K\r    Sources: importing...");
 				fflush(stdout);
 				while((row = mysql_fetch_row(myresult))) {
-					/*
+					// full (author(s) + title)
 					ptr_sources[i] = ptr;
-					ptr = strncpy(ptr, row[0], SOURCE_BUFFER_SIZE - 1);
+					ptr = strncpy(ptr, row[1], SOURCE_BUFFER_SIZE - 1);
 					ptr[SOURCE_BUFFER_SIZE - 1] = '\0';
-					ptr += strlen(row[0]) + 1;
-					strncpy(source_types[i], row[1], SOURCE_TYPES_BUFFER_SIZE - 1);
-					source_types[i][SOURCE_TYPES_BUFFER_SIZE - 1] = '\0';
+					//printf("\nk: %s", ptr);
+					ptr += strlen(row[1]) + 1;
+					//strncpy(source_types[i], row[1], SOURCE_TYPES_BUFFER_SIZE - 1);
+					//source_types[i][SOURCE_TYPES_BUFFER_SIZE - 1] = '\0';
 					++i;
-					*/
 					// authors
 					ptr_sources_author[iauthor] = ptr_author;
 					ptr_author = strncpy(ptr_author, row[0], SOURCE_BUFFER_SIZE - 1);
@@ -811,7 +821,7 @@ int func_read_mysql()
 							fprintf(stderr, "\nNo digits were found");
 
 						if(i == 0 || source_last != source_curnt) {
-							array_united[i] = INT_MIN; // TODO: text beginning marker ( < SOURCE_OFFSET) and subcorpora mask
+							array_united[i] = SOURCE_OFFSET - source_curnt;
 							++i;
 							source_last = source_curnt;
 							sent_last = -1;
@@ -1183,6 +1193,9 @@ void * func_run_cycle(struct thread_data *thdata)
 	// search types for every token
 	register unsigned long long search_types;
 
+	// search types for every token
+	register unsigned int search_types_source;
+
 	// distances
 	unsigned int dist1_start;
 	unsigned int dist1_end;
@@ -1213,6 +1226,7 @@ void * func_run_cycle(struct thread_data *thdata)
 	unsigned long long x5;
 	unsigned long long x6;
 
+	register int valid_source;
 	register int positive;
 	unsigned int progress;
 	unsigned int found_all;
@@ -1228,6 +1242,9 @@ void * func_run_cycle(struct thread_data *thdata)
 
 		// search types for every token
 		search_types = morph_types;
+
+		// search types for every source
+		search_types_source = morph_types_source;
 
 		// distances
 		dist1_start = dist_from[0];
@@ -1248,6 +1265,7 @@ void * func_run_cycle(struct thread_data *thdata)
 		progress = 0;
 		found_all = 0;
 		sent_begin = 0;
+		valid_source = 0;
 		z1 = main_begin;
 		last_pos = thdata->last_pos;
 		curnt_sent = first_sentence;
@@ -1258,160 +1276,169 @@ void * func_run_cycle(struct thread_data *thdata)
 		// param1
 		while(z1 < main_end) {
 			positive = array_united[z1];
+			// Check if a new text and/or sentence beginning
 			if(positive < 0) {
-				// TODO: it will be id of source_mask to check if this text is selected (subcorpora)
+				// Calculate sentence id
 				if(z1) 
 					++curnt_sent;
-				if(positive <= SOURCE_OFFSET)
+				// source_mask to check if this text(s) is selected (subcorpora)
+				if(positive <= SOURCE_OFFSET) {
+					if(source_mask[SOURCE_OFFSET - positive] == search_types_source)
+						valid_source = 1;
+					else
+						valid_source = 0;
 					positive = -array_united[++z1];
-				else
+				} else {
 					positive = -positive;
+				}
 				sent_begin = z1;
 			}
-			if((united_mask[positive] & 0xFF) == (search_types & 0xFF)) {
-				// param2
-				if(params > 1) {
-					z2 = z1 + dist1_start;
-					x2 = z1 + dist1_end;
-					while(z2 < main_end && z2 <= x2 && array_united[z2] >= 0)  {
-						if((united_mask[array_united[z2]] & 0xFF00) == (search_types & 0xFF00)) {
-							// param3
-							if(params > 2) {
-								z3 = z2 + dist2_start;
-								x3 = z2 + dist2_end;
-								while(z3 < main_end && z3 <= x3 && array_united[z3] >= 0) {
-									if((united_mask[array_united[z3]] & 0xFF0000) == (search_types & 0xFF0000)) {
-										// param4
-										if(params > 3) {
-											z4 = z3 + dist3_start;
-											x4 = z3 + dist3_end;
-											while(z4 < main_end && z4 <= x4 && array_united[z4] >= 0) {
-												if((united_mask[array_united[z4]] & 0xFF000000) == (search_types & 0xFF000000)) {
-													// param5
-													if(params > 4) {
-														z5 = z4 + dist4_start;
-														x5 = z4 + dist4_end;
-														while(z5 < main_end && z5 <= x5 && array_united[z5] >= 0) {
-															if((united_mask[array_united[z5]] & 0xFF00000000) == (search_types & 0xFF00000000)) {
-																// param6
-																if(params > 5) {
-																	z6 = z5 + dist5_start;
-																	x6 = z5 + dist5_end;
-																	while(z6 < main_end && z6 <= x6 && array_united[z6] >= 0) {
-																		if((united_mask[array_united[z6]] & 0xFF0000000000) == (search_types & 0xFF0000000000)) {
-																			if((z1 > last_pos || !last_pos) && found_limit) {
-																				sem_wait(&count_sem);
-																				if(found_limit) {
-																					--found_limit;
-																					sem_post(&count_sem);
-																					func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
-																					last_pos = z1;
-																				} else {
-																					sem_post(&count_sem);
+			if(valid_source) {
+				if((united_mask[positive] & 0xFF) == (search_types & 0xFF)) {
+					// param2
+					if(params > 1) {
+						z2 = z1 + dist1_start;
+						x2 = z1 + dist1_end;
+						while(z2 < main_end && z2 <= x2 && array_united[z2] >= 0)  {
+							if((united_mask[array_united[z2]] & 0xFF00) == (search_types & 0xFF00)) {
+								// param3
+								if(params > 2) {
+									z3 = z2 + dist2_start;
+									x3 = z2 + dist2_end;
+									while(z3 < main_end && z3 <= x3 && array_united[z3] >= 0) {
+										if((united_mask[array_united[z3]] & 0xFF0000) == (search_types & 0xFF0000)) {
+											// param4
+											if(params > 3) {
+												z4 = z3 + dist3_start;
+												x4 = z3 + dist3_end;
+												while(z4 < main_end && z4 <= x4 && array_united[z4] >= 0) {
+													if((united_mask[array_united[z4]] & 0xFF000000) == (search_types & 0xFF000000)) {
+														// param5
+														if(params > 4) {
+															z5 = z4 + dist4_start;
+															x5 = z4 + dist4_end;
+															while(z5 < main_end && z5 <= x5 && array_united[z5] >= 0) {
+																if((united_mask[array_united[z5]] & 0xFF00000000) == (search_types & 0xFF00000000)) {
+																	// param6
+																	if(params > 5) {
+																		z6 = z5 + dist5_start;
+																		x6 = z5 + dist5_end;
+																		while(z6 < main_end && z6 <= x6 && array_united[z6] >= 0) {
+																			if((united_mask[array_united[z6]] & 0xFF0000000000) == (search_types & 0xFF0000000000)) {
+																				if((z1 > last_pos || !last_pos) && found_limit) {
+																					sem_wait(&count_sem);
+																					if(found_limit) {
+																						--found_limit;
+																						sem_post(&count_sem);
+																						func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, z5, z6);
+																						last_pos = z1;
+																					} else {
+																						sem_post(&count_sem);
+																					}
+																				}
+																				++found_all;
+																				if(z1 == last_pos) {
+																					progress = found_all;
 																				}
 																			}
-																			++found_all;
-																			if(z1 == last_pos) {
-																				progress = found_all;
+																			++z6;
+																		}
+																	} else {
+																		if((z1 > last_pos || !last_pos) && found_limit) {
+																			sem_wait(&count_sem);
+																			if(found_limit) {
+																				--found_limit;
+																				sem_post(&count_sem);
+																				func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
+																				last_pos = z1;
+																			} else {
+																				sem_post(&count_sem);
 																			}
 																		}
-																		++z6;
-																	}
-																} else {
-																	if((z1 > last_pos || !last_pos) && found_limit) {
-																		sem_wait(&count_sem);
-																		if(found_limit) {
-																			--found_limit;
-																			sem_post(&count_sem);
-																			func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, z5, 0);
-																			last_pos = z1;
-																		} else {
-																			sem_post(&count_sem);
+																		++found_all;
+																		if(z1 == last_pos) {
+																			progress = found_all;
 																		}
 																	}
-																	++found_all;
-																	if(z1 == last_pos) {
-																		progress = found_all;
-																	}
+																}
+																++z5;
+															}
+														} else {
+															if((z1 > last_pos || !last_pos) && found_limit) {
+																sem_wait(&count_sem);
+																if(found_limit) {
+																	--found_limit;
+																	sem_post(&count_sem);
+																	func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
+																	last_pos = z1;
+																} else {
+																	sem_post(&count_sem);
 																}
 															}
-															++z5;
-														}
-													} else {
-														if((z1 > last_pos || !last_pos) && found_limit) {
-															sem_wait(&count_sem);
-															if(found_limit) {
-																--found_limit;
-																sem_post(&count_sem);
-																func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, z4, 0, 0);
-																last_pos = z1;
-															} else {
-																sem_post(&count_sem);
+															++found_all;
+															if(z1 == last_pos) {
+																progress = found_all;
 															}
 														}
-														++found_all;
-														if(z1 == last_pos) {
-															progress = found_all;
-														}
+													}
+													++z4;
+												}
+											} else {
+												if((z1 > last_pos || !last_pos) && found_limit) {
+													sem_wait(&count_sem);
+													if(found_limit) {
+														--found_limit;
+														sem_post(&count_sem);
+														func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
+														last_pos = z1;
+													} else {
+														sem_post(&count_sem);
 													}
 												}
-												++z4;
-											}
-										} else {
-											if((z1 > last_pos || !last_pos) && found_limit) {
-												sem_wait(&count_sem);
-												if(found_limit) {
-													--found_limit;
-													sem_post(&count_sem);
-													func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
-													last_pos = z1;
-												} else {
-													sem_post(&count_sem);
+												++found_all;
+												if(z1 == last_pos) {
+													progress = found_all;
 												}
 											}
-											++found_all;
-											if(z1 == last_pos) {
-												progress = found_all;
-											}
+										}
+										++z3;
+									}
+								} else {
+									if((z1 > last_pos || !last_pos) && found_limit) {
+										sem_wait(&count_sem);
+										if(found_limit) {
+											--found_limit;
+											sem_post(&count_sem);
+											func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
+											last_pos = z1;
+										} else {
+											sem_post(&count_sem);
 										}
 									}
-									++z3;
-								}
-							} else {
-								if((z1 > last_pos || !last_pos) && found_limit) {
-									sem_wait(&count_sem);
-									if(found_limit) {
-										--found_limit;
-										sem_post(&count_sem);
-										func_build_sents(main_end, curnt_sent, sent_begin, z1, z2, 0, 0, 0, 0);
-										last_pos = z1;
-									} else {
-										sem_post(&count_sem);
+									++found_all;
+									if(z1 == last_pos) {
+										progress = found_all;
 									}
 								}
-								++found_all;
-								if(z1 == last_pos) {
-									progress = found_all;
-								}
+							}
+							++z2;
+						}
+					} else {
+						if((z1 > last_pos || !last_pos) && found_limit) {
+							sem_wait(&count_sem);
+							if(found_limit) {
+								--found_limit;
+								sem_post(&count_sem);
+								func_build_sents(main_end, curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
+								last_pos = z1;
+							} else {
+								sem_post(&count_sem);
 							}
 						}
-						++z2;
-					}
-				} else {
-					if((z1 > last_pos || !last_pos) && found_limit) {
-						sem_wait(&count_sem);
-						if(found_limit) {
-							--found_limit;
-							sem_post(&count_sem);
-							func_build_sents(main_end, curnt_sent, sent_begin, z1, 0, 0, 0, 0, 0);
-							last_pos = z1;
-						} else {
-							sem_post(&count_sem);
+						++found_all;
+						if(z1 == last_pos) {
+							progress = found_all;
 						}
-					}
-					++found_all;
-					if(z1 == last_pos) {
-						progress = found_all;
 					}
 				}
 			}
@@ -1514,7 +1541,7 @@ int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, cha
 	register const unsigned long long united_end = thdata_united->finish;
 	regex_t start_state;
 
-	//if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // TODO: Case sensitive
+	//if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // TODO: Case insensitive
 	if(regcomp(&start_state, pattern, REG_EXTENDED)) {
 		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
 		return 1;
@@ -1549,6 +1576,30 @@ int func_regex_normalization(const char match[WORDS_BUFFER_SIZE])
 	}
 	printf("\nRegEx: %s -> %s", match, pattern);
 */
+	return 0;
+}
+
+
+/*
+ * RegEx sources
+ */
+int func_regex_sources(const char pattern[SOURCE_BUFFER_SIZE])
+{
+	regex_t start_state;
+	const int type = 0; // Offset for full source. TODO: 1 - Author(s), 2 - Title, 3 - ...
+
+	if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // Case insensitive
+		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
+		return 1;
+	}
+	for(unsigned long long i = 0; i < SOURCES_ARRAY_SIZE; i++) {
+		if(!regexec(&start_state, ptr_sources[i], 0, NULL, 0)) {
+			source_mask[i] += (unsigned int)1 << (type);
+			if(DEBUG)
+				printf("\nfunc_regex_sources: %s -> %s", pattern, ptr_sources[i]);
+		}
+	}
+	regfree(&start_state);
 	return 0;
 }
 
@@ -1619,6 +1670,71 @@ setMask:
 
 
 /*
+ * Advanced pattern matching (*?) search for sources
+ */
+//int func_szWildMatchSource(const char match[SOURCE_BUFFER_SIZE], const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type, struct thread_data_united *thdata_united)
+int func_szWildMatchSource(const char match[SOURCE_BUFFER_SIZE])
+{
+	char a;
+	int star;
+	register const char *str, *pat, *s, *p;
+
+	const int type = 0; // Offset for full source. TODO: 1 - Author(s), 2 - Title, 3 - ...
+
+	//for(unsigned long long i = united_begin; i < united_end; i++) {
+	for(unsigned long long i = 0; i < SOURCES_ARRAY_SIZE; i++) {
+		// Alessandro Felice Cantatore
+		// http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
+		// Warning! You should make *** -> * substitution in PHP (or here somewhere earlier) to work this algorithm correctly
+		// or just uncomment 2 lines below.
+		star = 0;
+		pat = match;
+		str = ptr_sources[i];
+loopStart:
+		for(s = str, p = pat; *s; ++s, ++p) {
+			switch(*p) {
+				case '?':
+					// for jumping correctly over UTF-8 character
+					if(*s < 0) {
+						a = *s;
+						a <<= 1;
+						while(a < 0) {
+							a <<= 1;
+							++s;
+						}
+					}
+					break;
+				case '*':
+					star = 1;
+					str = s, pat = p;
+					//do { ++pat; } while(*pat == '*'); // PHP: *** -> *
+					if(!*++pat) goto setMask;
+					goto loopStart;
+				default:
+					//if(mapCaseTable[*s] != mapCaseTable[*p]) // Case sensitive
+					if(*s != *p) goto starCheck;
+					break;
+			}
+		}
+		if(*p == '*') ++p;
+		//while(*p == '*') ++p; // PHP: *** -> *
+		if(!*p) goto setMask;
+		continue;
+starCheck:
+		if(!star) continue;
+		str++;
+		goto loopStart;
+setMask:
+		//united_mask[i] += (unsigned long long)1 << (SEARCH_TYPES_OFFSET * mask_offset + type);
+		source_mask[i] += (unsigned int)1 << (type);
+		//if(DEBUG)
+		//	printf("\nfunc_szWildMatchSource: %s -> %s", match, ptr_sources[i]);
+	}
+	return 0;
+}
+
+
+/*
  * Get id using binary search in the array of uniq elements
  */
 int func_szExactMatch(char **ptr, char match[WORDS_BUFFER_SIZE], const int array_size, const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type)
@@ -1653,31 +1769,6 @@ void * func_run_united(struct thread_data_united *thdata_united)
 				//func_sort_tags(tags[x]);
 				func_szWildMatch(tags[x], x, united_tags, TAGS, thdata_united);
 			}
-			/*
-			if(regex) {
-				if(wildmatch[x][0]) {
-					if(case_sensitive[x]) {
-						func_regex(wildmatch[x], x, united_words_case, WILD, thdata_united);
-					} else {
-						func_regex(wildmatch[x], x, united_words, WILD, thdata_united);
-					}
-				}
-				if(wildmatch_lemma[x][0]) {
-					func_regex(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
-				}
-			} else {
-				if(wildmatch[x][0]) {
-					if(case_sensitive[x]) {
-						func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
-					} else {
-						func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
-					}
-				}
-				if(wildmatch_lemma[x][0]) {
-					func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
-				}
-			}
-			*/
 			if(wildmatch[x][0]) {
 				if(case_sensitive[x]) {
 					if(regex)
@@ -1780,6 +1871,15 @@ int func_fill_search_mask()
 	}
 	if(DEBUG)
 		printf("\nmorph_types: %llu\n", morph_types);
+
+	// Sources
+	if(source[0] == '\0')
+		morph_types_source = 0; // Search in all sources
+	else
+		morph_types_source += ((unsigned int)1 << (SOURCE)); // Search in particular sources
+
+	if(DEBUG)
+		printf("\nmorph_types_source: %d\n", morph_types_source);
 	return 0;
 }
 
@@ -1925,6 +2025,7 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 			} else {
 				// Preparing arrays
 				memset(united_mask, 0, sizeof(united_mask));
+				memset(source_mask, 0, sizeof(source_mask));
 
 				// Setting global variables
 				func_fill_search_mask();
@@ -1934,8 +2035,8 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 				// Set the initial value of counters
 				found_limit = return_sentences;
 
-				time_start(&tv2);
 				// Find ids and set masks for all search words, lemmas, tags and patterns
+				time_start(&tv2);
 				for(t = 0; t < params; t++) {
 					if(word[t][0]) {
 						if(case_sensitive[t])
@@ -1949,6 +2050,16 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 						func_sort_tags(tags[t]);
 				}
 				printf("\n\nszExactMatch() time: %ld milliseconds.", time_stop(&tv2));
+
+				// Find source(s)
+				time_start(&tv2);
+				if(regex) {
+					func_regex_sources(source);
+					printf("\n\nsz_regex_sources() time: %ld milliseconds.", time_stop(&tv2));
+				} else {
+					func_szWildMatchSource(source);
+					printf("\n\nszWildMatchSource() time: %ld milliseconds.", time_stop(&tv2));
+				}
 
 				time_start(&tv3);
 				// broadcast to workers to work
@@ -2120,10 +2231,10 @@ int main(/* int argc, char *argv[] */)
 	list_tags = malloc(sizeof(*list_tags) * size_list_tags);
 	memset(list_tags, 1, sizeof(*list_tags) * size_list_tags);
 
-	// sources
-	//size_list_sources = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
-	//list_sources = malloc(sizeof(*list_sources) * size_list_sources);
-	//memset(list_sources, 1, sizeof(*list_sources) * size_list_sources);
+	// sources full
+	size_list_sources = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;
+	list_sources = malloc(sizeof(*list_sources) * size_list_sources);
+	memset(list_sources, 1, sizeof(*list_sources) * size_list_sources);
 
 	// authors
 	size_list_sources_author = SOURCES_ARRAY_SIZE * SOURCE_BUFFER_SIZE;

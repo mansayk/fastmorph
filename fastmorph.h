@@ -11,9 +11,10 @@
 #ifndef FASTMORPH_H
 #define FASTMORPH_H
 
-#define VERSION				"Version v5.6.0 - 2018.02.18"		/*   Version and date								*/
+#define VERSION				"Version v5.6.1 - 2018.03.25"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 
+#define SOURCE				0					/*   id of sources full								*/
 #define WORD				0					/*   id of words								*/
 #define LEMMA				1					/*   id of lemmas								*/
 #define TAGS				2					/*   id of tags									*/
@@ -21,10 +22,10 @@
 #define WILD_LEMMA			4					/*   id of wildmatch lemmas							*/
 #define SEARCH_TYPES_OFFSET		8					/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
 #define SOURCES_ARRAY_SIZE		2750					/*   Size of sources arrays							*/
-#define AMOUNT_SENTENCES		10015946				/*   Amount of sentences							*/
-//#define AMOUNT_SENTENCES		64900					/*   Amount of sentences	TEST						*/
-#define SIZE_ARRAY_MAIN			(139991551 + SOURCES_ARRAY_SIZE)	/*   Size of array_main								*/
-//#define SIZE_ARRAY_MAIN		(1000000 + SOURCES_ARRAY_SIZE)		/*   Size of array_main		TEST						*/
+//#define AMOUNT_SENTENCES		10015946				/*   Amount of sentences							*/
+#define AMOUNT_SENTENCES		64900					/*   Amount of sentences	TEST						*/
+//#define SIZE_ARRAY_MAIN			(139991551 + SOURCES_ARRAY_SIZE)	/*   Size of array_main								*/
+#define SIZE_ARRAY_MAIN		(1000000 + SOURCES_ARRAY_SIZE)		/*   Size of array_main		TEST						*/
 #define TAGS_ARRAY_SIZE			14864					/*   Size of tags combinations array						*/
 #define TAGS_UNIQ_BUFFER_SIZE		32					/*   Length of buffer for uniq tags 						*/
 #define TAGS_UNIQ_ARRAY_SIZE		134					/*   Amount of uniq tags	 						*/
