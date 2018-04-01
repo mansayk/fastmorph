@@ -13,7 +13,7 @@
 
 /********** GLOBAL **********************************************************************************************************************************************/
 
-#define VERSION				"Version v5.6.2 - 2018.03.31"		/*   Version and date								*/
+#define VERSION				"Version v5.6.3 - 2018.04.01"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 //#define TEST_MODE								/*   TEST mode									*/
 
