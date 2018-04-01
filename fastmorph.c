@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.6.3 - 2018.04.01
+ * Version v5.6.4 - 2018.04.01
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -1650,10 +1650,9 @@ int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, cha
 	char pattern_enclosed[WORDS_BUFFER_SIZE];
 
 	// Add ^...$
-	if(pattern[0] != '^') {
-		strncpy(pattern_enclosed, "^", WORDS_BUFFER_SIZE - 1);
-		pattern_enclosed[WORDS_BUFFER_SIZE - 1] = '\0';
-	}
+	pattern_enclosed[0] = '\0';
+	if(pattern[0] != '^')
+		strncat(pattern_enclosed, "^", WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
 	strncat(pattern_enclosed, pattern, WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
 	if(pattern[strlen(pattern) - 1] != '$')
 		strncat(pattern_enclosed, "$", WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
@@ -1706,10 +1705,9 @@ int func_regex_sources(const char pattern[SOURCE_BUFFER_SIZE])
 	char pattern_enclosed[WORDS_BUFFER_SIZE];
 
 	// Add ^...$
-	if(pattern[0] != '^') {
-		strncpy(pattern_enclosed, "^", WORDS_BUFFER_SIZE - 1);
-		pattern_enclosed[WORDS_BUFFER_SIZE - 1] = '\0';
-	}
+	pattern_enclosed[0] = '\0';
+	if(pattern[0] != '^')
+		strncat(pattern_enclosed, "^", WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
 	strncat(pattern_enclosed, pattern, WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
 	if(pattern[strlen(pattern) - 1] != '$')
 		strncat(pattern_enclosed, "$", WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
