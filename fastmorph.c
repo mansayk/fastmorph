@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.6.1 - 2018.03.25
+ * Version v5.6.3 - 2018.04.01
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -869,6 +869,7 @@ int func_read_mysql()
 /*
  * Finding search distances for each thread
  */
+/*
 int func_find_distances_for_threads()
 {
 	printf("\n\nSearch distances for each thread:");
@@ -904,11 +905,96 @@ int func_find_distances_for_threads()
 	}
 	return 0;
 }
+*/
+/*
+int func_find_distances_for_threads()
+{
+	printf("\n\nSearch distances for each thread:");
+	unsigned int x, y;
+	unsigned int sentence = 0;
+	unsigned long long min_part = SIZE_ARRAY_MAIN / SEARCH_THREADS;
+	for(x = 0; x < SEARCH_THREADS; x++) {
+		// distances
+		thread_data_array[x].finish = x * min_part + min_part - 1;
+		if(x == 0) {
+			thread_data_array[x].start = 0;
+		} else {
+			//thread_data_array[x].start = thread_data_array[x-1].finish + 1;
+			thread_data_array[x].start = thread_data_array[x-1].finish + 1; /////////////////////////////////////////////////////////////
+		}
+		if(x == SEARCH_THREADS - 1) {
+			thread_data_array[x].finish = SIZE_ARRAY_MAIN - 1;
+		} else {
+			while(array_united[thread_data_array[x].finish] > SOURCE_OFFSET) {
+				++thread_data_array[x].finish;
+			}
+			//--thread_data_array[x].finish;
+		}
+		// sentences
+		thread_data_array[x].first_sentence = sentence;
+		y = thread_data_array[x].start;
+		//while(y <= thread_data_array[x].finish) {
+		while(y < thread_data_array[x].finish) {
+			if(array_united[y] > SOURCE_OFFSET && array_united[y] < 0) {
+				++sentence;
+			}
+			++y;
+		}
+
+		//--sentence; ///////////////////////////////////////////////////////////
+
+		printf("\n  Thread #%d part:%llu start:%llu finish:%llu first_sentence:%u first_element:%d last_element:%d", x, min_part, thread_data_array[x].start, thread_data_array[x].finish, thread_data_array[x].first_sentence, array_united[thread_data_array[x].start], array_united[thread_data_array[x].finish]);
+	}
+	return 0;
+}
+*/
+int func_find_distances_for_threads()
+{
+	printf("\n\nSearch distances for each thread:");
+	unsigned int x, y;
+	unsigned int sentence = 0;
+	unsigned long long min_part = SIZE_ARRAY_MAIN / SEARCH_THREADS;
+
+	// first
+	thread_data_array[0].start = 0;
+	thread_data_array[0].first_sentence = 0;
+
+	for(x = 0; x < SEARCH_THREADS; x++) {
+		// distances
+		if(x != 0) {
+			thread_data_array[x].start = thread_data_array[x-1].finish + 1;
+			thread_data_array[x].first_sentence = sentence - 1;
+		}
+		if(x != SEARCH_THREADS - 1) {
+			thread_data_array[x].finish = x * min_part + min_part - 1;
+			while(array_united[thread_data_array[x].finish] > SOURCE_OFFSET) {
+				++thread_data_array[x].finish;
+			}
+			--thread_data_array[x].finish;
+		}
+		// sentences
+		y = thread_data_array[x].start;
+		while(y <= thread_data_array[x].finish) {
+			if(array_united[y] > SOURCE_OFFSET && array_united[y] < 0) {
+				++sentence;
+			}
+			++y;
+		}
+		printf("\n  Thread #%d part:%llu start:%llu finish:%llu first_sentence:%u first_element:%d last_element:%d", x, min_part, thread_data_array[x].start, thread_data_array[x].finish, thread_data_array[x].first_sentence, array_united[thread_data_array[x].start], array_united[thread_data_array[x].finish]);
+	}
+	// last
+	thread_data_array[SEARCH_THREADS - 1].finish = SIZE_ARRAY_MAIN - 1;
+	/*
+	thread_data_array[0].first_sentence = thread_data_array[0].first_sentence;
+	*/
+	return 0;
+}
 
 
 /*
  * Finding search distances for each thread united
  */
+/*
 int func_find_distances_for_threads_united()
 {
 	printf("\n\nSearch distances for each thread united:");
@@ -926,6 +1012,26 @@ int func_find_distances_for_threads_united()
 		}
 		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
 	}
+	return 0;
+}
+*/
+int func_find_distances_for_threads_united()
+{
+	printf("\n\nSearch distances for each thread united:");
+	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
+	
+	// first
+	thread_data_array_united[0].start = 0;
+
+	for(int x = 0; x < SEARCH_THREADS; x++) {
+		thread_data_array_united[x].finish = x * min_part + min_part - 1;
+		if(x != 0) {
+			thread_data_array_united[x].start = (thread_data_array_united[x-1].finish + 1);
+		}
+		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
+	}
+	// last
+	thread_data_array_united[SEARCH_THREADS - 1].finish = UNITED_ARRAY_SIZE - 1;
 	return 0;
 }
 
@@ -1271,7 +1377,7 @@ void * func_run_cycle(struct thread_data *thdata)
 		curnt_sent = first_sentence;
 
 		if(DEBUG)
-			printf("\nz1=%lld, positive=%d, last_pos=%lld, curnt_sent=%d, sent_begin=%lld, found_limit=%d", z1, positive, last_pos, curnt_sent, sent_begin, found_limit);
+			printf("\nz1=%lld, positive=%d, last_pos=%lld, curnt_sent=%d, sent_begin=%lld, found_limit=%d, thread=%d", z1, positive, last_pos, curnt_sent, sent_begin, found_limit, thdata->id);
 
 		// param1
 		while(z1 < main_end) {
@@ -1283,6 +1389,7 @@ void * func_run_cycle(struct thread_data *thdata)
 					++curnt_sent;
 				// source_mask to check if this text(s) is selected (subcorpora)
 				if(positive <= SOURCE_OFFSET) {
+					//printf("\nsources_test: %d == %d", source_mask[SOURCE_OFFSET - positive], search_types_source);
 					if(source_mask[SOURCE_OFFSET - positive] == search_types_source)
 						valid_source = 1;
 					else
@@ -1540,9 +1647,18 @@ int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, cha
 	const unsigned long long united_begin = thdata_united->start;
 	register const unsigned long long united_end = thdata_united->finish;
 	regex_t start_state;
+	char pattern_enclosed[WORDS_BUFFER_SIZE];
 
-	//if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // TODO: Case insensitive
-	if(regcomp(&start_state, pattern, REG_EXTENDED)) {
+	// Add ^...$
+	if(pattern[0] != '^') {
+		strncpy(pattern_enclosed, "^", WORDS_BUFFER_SIZE - 1);
+		pattern_enclosed[WORDS_BUFFER_SIZE - 1] = '\0';
+	}
+	strncat(pattern_enclosed, pattern, WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
+	if(pattern[strlen(pattern) - 1] != '$')
+		strncat(pattern_enclosed, "$", WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
+
+	if(regcomp(&start_state, pattern_enclosed, REG_EXTENDED)) {
 		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
 		return 1;
 	}
@@ -1587,8 +1703,18 @@ int func_regex_sources(const char pattern[SOURCE_BUFFER_SIZE])
 {
 	regex_t start_state;
 	const int type = 0; // Offset for full source. TODO: 1 - Author(s), 2 - Title, 3 - ...
+	char pattern_enclosed[WORDS_BUFFER_SIZE];
 
-	if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // Case insensitive
+	// Add ^...$
+	if(pattern[0] != '^') {
+		strncpy(pattern_enclosed, "^", WORDS_BUFFER_SIZE - 1);
+		pattern_enclosed[WORDS_BUFFER_SIZE - 1] = '\0';
+	}
+	strncat(pattern_enclosed, pattern, WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
+	if(pattern[strlen(pattern) - 1] != '$')
+		strncat(pattern_enclosed, "$", WORDS_BUFFER_SIZE - strlen(pattern_enclosed) - 1);
+
+	if(regcomp(&start_state, pattern_enclosed, REG_EXTENDED|REG_ICASE)) { // Case insensitive
 		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
 		return 1;
 	}
@@ -1680,6 +1806,13 @@ int func_szWildMatchSource(const char match[SOURCE_BUFFER_SIZE])
 	register const char *str, *pat, *s, *p;
 
 	const int type = 0; // Offset for full source. TODO: 1 - Author(s), 2 - Title, 3 - ...
+
+	/*
+	if(strcmp(match, "") == 0) {
+		strncpy(bufout, "{\"id\":-1}", SOCKET_BUFFER_SIZE - 1);
+		bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
+	}
+	*/
 
 	//for(unsigned long long i = united_begin; i < united_end; i++) {
 	for(unsigned long long i = 0; i < SOURCES_ARRAY_SIZE; i++) {
@@ -1850,8 +1983,16 @@ int func_fill_search_mask()
 	morph_types = 0;
 
 	// Calculate amount of params (words) to search
+	/*
 	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0] || wildmatch_lemma[params][0])) {
 		++params;
+	}
+	*/
+	for(int i = AMOUNT_TOKENS - 1; i >= 0; i--) {
+		if(word[i][0] || lemma[i][0] || tags[i][0] || wildmatch[i][0] || wildmatch_lemma[i][0]) {
+			params = i + 1;
+			break;
+		}
 	}
 
 	if(DEBUG)
@@ -1873,9 +2014,8 @@ int func_fill_search_mask()
 		printf("\nmorph_types: %llu\n", morph_types);
 
 	// Sources
-	if(source[0] == '\0')
-		morph_types_source = 0; // Search in all sources
-	else
+	morph_types_source = 0; // Search in all sources
+	if(strcmp(source, ""))
 		morph_types_source += ((unsigned int)1 << (SOURCE)); // Search in particular sources
 
 	if(DEBUG)
@@ -2053,12 +2193,16 @@ void * func_run_socket(/*int argc, char *argv[]*/)
 
 				// Find source(s)
 				time_start(&tv2);
-				if(regex) {
-					func_regex_sources(source);
-					printf("\n\nsz_regex_sources() time: %ld milliseconds.", time_stop(&tv2));
-				} else {
-					func_szWildMatchSource(source);
-					printf("\n\nszWildMatchSource() time: %ld milliseconds.", time_stop(&tv2));
+
+				// If 'source' isn't empty, do the source search
+				if(strcmp(source, "") != 0) {
+					if(regex) {
+						func_regex_sources(source);
+						printf("\n\nsz_regex_sources() time: %ld milliseconds.", time_stop(&tv2));
+					} else {
+						func_szWildMatchSource(source);
+						printf("\n\nszWildMatchSource() time: %ld milliseconds.", time_stop(&tv2));
+					}
 				}
 
 				time_start(&tv3);

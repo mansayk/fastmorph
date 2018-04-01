@@ -1,4 +1,4 @@
-# make -f Makefile.fastngrams clean && make -f Makefile.fastngrams && ./fastngrams
+# clear && make -f Makefile.fastngrams clean && make -f Makefile.fastngrams && ./fastngrams
 
 CC = gcc
 

@@ -1,4 +1,4 @@
-# make -f Makefile.fastmorph clean && make -f Makefile.fastmorph && ./fastmorph
+# clear && make -f Makefile.fastmorph clean && make -f Makefile.fastmorph && ./fastmorph
 
 CC = gcc
 
@@ -16,5 +16,3 @@ $(TARGET): $(TARGET).c
 
 clean:
 	$(RM) $(TARGET) *~ .*~ /tmp/fastmorph.socket
-
-
