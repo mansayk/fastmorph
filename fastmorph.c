@@ -1570,7 +1570,7 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 	} while(array_united[++sent_begin] >= 0 && sent_begin < end);
 
 	strncat(bufout, "\"},", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	if(DEBUG)
+	//if(DEBUG)
 		printf("\nDEBUG> bufout: %s", bufout);
 
 	// Sending JSON string over socket file
@@ -1714,11 +1714,12 @@ void * func_run_cycle(struct thread_data *thdata)
 					++z1;
 				}
 				//else {
-					//negative = -negative;
-					curnt_sent = -array_united[z1];
-					sent_begin = ++z1;
+				//negative = -negative;
+				curnt_sent = -array_united[z1];
+				sent_begin = ++z1;
+				//++z1;
 				//}
-				continue;
+//				continue;
 			}
 			if(valid_source) {
 				if((united_mask[array_united[z1]] & 0xFF) == (search_types & 0xFF)) {
@@ -1934,14 +1935,15 @@ int func_extend_context(unsigned int extend_sent)
 				curnt_source = SOURCE_OFFSET - array_united[z1];
 				++z1;
 			}
+			curnt_sent = -array_united[z1];
 			++z1;
 			if(curnt_sent >= extend_min) {
 				if(curnt_sent <= extend_max)
-					func_build_sents(SIZE_ARRAY_MAIN, curnt_source, curnt_sent, z1, -1, -1, -1, -1, -1, -1);
+					func_build_sents(SIZE_ARRAY_MAIN - 1, curnt_source, curnt_sent, z1, -1, -1, -1, -1, -1, -1);
 				else
 					break;
 			}
-			++curnt_sent;
+			//++curnt_sent;
 		}
 		++z1;
 	}
