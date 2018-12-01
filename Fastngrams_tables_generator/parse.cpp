@@ -12,6 +12,9 @@ Params:
     -q	Quiet.
     -t	Print output as tree. By defolt - print output as rows.
     -i	Set starting NodeID for the tree output.
+
+https://github.com/khusairu
+
 */
 
 #include<iostream>
