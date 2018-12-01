@@ -15,6 +15,6 @@ $(TARGET): $(TARGET).c
 	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c jsmn-master/jsmn.c
 
 clean:
-	$(RM) $(TARGET) *~ .*~ /tmp/fastmorph.socket
+	$(RM) $(TARGET) *~ .*~ /var/run/fastmorph/fastmorph.socket
 
 
