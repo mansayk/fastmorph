@@ -1,6 +1,6 @@
 /*
  * fastngrams.c - Fast search engine for n-grams.
- * Version v5.6.0 - 2018.02.18
+ * Version v5.7.1 - 2018.12.01
  *
  * "fastngrams" is a high speed search engine for n-grams:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -447,8 +447,7 @@ int func_connect_mysql()
 {
 	printf("MySQL: ");
 	myconnect = mysql_init(NULL);
-
-	if(!(mysql_real_connect(myconnect, "localhost", DBUSER, DBPASSWORD, DB, 3308, NULL, 0))) {
+	if(!(mysql_real_connect(myconnect, DBHOST, DBUSER, DBPASSWORD, DB, 3306, NULL, 0))) {
 		printf("\n  ***ERROR: Cannot connect to MySQL: \n");
 		fprintf(stderr, "%s\n", mysql_error(myconnect));
 		mysql_close(myconnect);
@@ -487,7 +486,7 @@ int func_read_mysql()
 		printf("\n  Beginning data import...");
 
 		// load tags_uniq table
-		sprintf(mycommand, "SELECT id, tag FROM morph6_tags_uniq_apertium LIMIT %d", TAGS_UNIQ_ARRAY_SIZE);
+		sprintf(mycommand, "SELECT id, tag FROM fastmorph_tags_uniq LIMIT %d", TAGS_UNIQ_ARRAY_SIZE);
 		if(mysql_query(myconnect, mycommand)) {
 			printf("\n    ***ERROR: Cannot make query to MySQL!\n");
 			exit(-1);
@@ -521,7 +520,7 @@ int func_read_mysql()
 
 		// load tags (combinations) table
 		ptr = list_tags;
-		if(mysql_query(myconnect, "SELECT id, combinations FROM morph6_tags_apertium")) {
+		if(mysql_query(myconnect, "SELECT id, combinations FROM fastmorph_tags")) {
 			printf("\n    ***ERROR: Cannot make query to MySQL!\n");
 			exit(-1);
 		} else {
@@ -551,7 +550,7 @@ int func_read_mysql()
 		printf("\n    Words_case: getting list...");
 		fflush(stdout);
 		ptr = list_words_case;
-		if(mysql_query(myconnect, "SELECT word_case FROM morph6_words_case_apertium")) {
+		if(mysql_query(myconnect, "SELECT word_case FROM fastmorph_words_case")) {
 			printf("\n***ERROR: Cannot make query to MySQL!\n");
 			exit(-1);
 		} else {
@@ -583,7 +582,7 @@ int func_read_mysql()
 		printf("\n    Words: getting list...");
 		fflush(stdout);
 		ptr = list_words;
-		if(mysql_query(myconnect, "SELECT word FROM morph6_words_apertium")) {
+		if(mysql_query(myconnect, "SELECT word FROM fastmorph_words")) {
 			printf("\n***ERROR: Cannot make query to MySQL!");
 			exit(-1);
 		} else {
@@ -615,7 +614,7 @@ int func_read_mysql()
 		printf("\n    Lemmas: getting list...");
 		fflush(stdout);
 		ptr = list_lemmas;
-		if(mysql_query(myconnect, "SELECT lemma FROM morph6_lemmas_apertium")) {
+		if(mysql_query(myconnect, "SELECT lemma FROM fastmorph_lemmas")) {
 			printf("\n***ERROR: Cannot make query to MySQL!\n");
 			exit(-1);
 		} else {
@@ -646,7 +645,7 @@ int func_read_mysql()
 		// load united
 		printf("\n    United: getting list...");
 		fflush(stdout);
-		if(mysql_query(myconnect, "SELECT word_case, word, lemma, tags FROM morph6_united_apertium")) {
+		if(mysql_query(myconnect, "SELECT word_case, word, lemma, tags FROM fastmorph_united")) {
 			printf("\n***ERROR: Cannot make query to MySQL!\n");
 			exit(-1);
 		} else {
@@ -695,7 +694,7 @@ int func_read_mysql()
 			} else {
 				n_mysql_load_limit = MYSQL_LOAD_LIMIT;
 			}
-			sprintf(mycommand, "SELECT level, node, parentnode, united, freq FROM morph6_ngrams WHERE id >= %d LIMIT %d", t, n_mysql_load_limit);
+			sprintf(mycommand, "SELECT level, node, parentnode, united, freq FROM fastngrams_ngrams WHERE id >= %d LIMIT %d", t, n_mysql_load_limit);
 			if(mysql_query(myconnect, mycommand)) {
 				printf("\n    ***ERROR: Cannot make query to MySQL!\n");
 				exit(-1);
@@ -1876,22 +1875,30 @@ int main(/* int argc, char *argv[] */)
 	*/
 
 	// wordforms case sensitive
-	size_list_words_case = WORDS_CASE_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	//
+	//
+	//
+	//size_list_words_case = WORDS_CASE_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	size_list_words_case = WORDS_CASE_ARRAY_SIZE * 30;
+
 	list_words_case = malloc(sizeof(*list_words_case) * size_list_words_case);
 	memset(list_words_case, 1, sizeof(*list_words_case) * size_list_words_case); // for detecting the very end of the string correctly
 
 	// wordforms
-	size_list_words = WORDS_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	//size_list_words = WORDS_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	size_list_words = WORDS_ARRAY_SIZE * 30;
 	list_words = malloc(sizeof(*list_words) * size_list_words);
 	memset(list_words, 1, sizeof(*list_words) * size_list_words);
 
 	// lemmas
-	size_list_lemmas = WORDS_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	//size_list_lemmas = WORDS_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	size_list_lemmas = WORDS_ARRAY_SIZE * 30;
 	list_lemmas = malloc(sizeof(*list_lemmas) * size_list_lemmas);
 	memset(list_lemmas, 1, sizeof(*list_lemmas) * size_list_lemmas);
 
 	// tags
-	size_list_tags = TAGS_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	//size_list_tags = TAGS_ARRAY_SIZE * WORDS_BUFFER_SIZE;
+	size_list_tags = TAGS_ARRAY_SIZE * 50;
 	list_tags = malloc(sizeof(*list_tags) * size_list_tags);
 	memset(list_tags, 1, sizeof(*list_tags) * size_list_tags);
 

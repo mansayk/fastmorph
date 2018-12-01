@@ -7,4 +7,4 @@
 #define DB		""
 #define DBUSER		""
 #define DBPASSWORD	""
-
+#define DBHOST		""
