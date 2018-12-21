@@ -18,7 +18,7 @@ LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 CREATE TABLE `fastmorph_words_case` (
 	`id` INT(7) NOT NULL,
 	`freq` INT(7) NOT NULL,
-	`word_case` VARCHAR(255) NOT NULL,
+	`word_case` VARCHAR(512) NOT NULL,
 	PRIMARY KEY(`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
@@ -29,7 +29,7 @@ LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 CREATE TABLE `fastmorph_words` (
 	`id` INT(7) NOT NULL,
 	`freq` INT(7) NOT NULL,
-	`word` VARCHAR(255) NOT NULL,
+	`word` VARCHAR(512) NOT NULL,
 	PRIMARY KEY(`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
@@ -40,7 +40,7 @@ LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 CREATE TABLE `fastmorph_lemmas` (
 	`id` INT(6) NOT NULL,
 	`freq` INT(7) NOT NULL,
-	`lemma` VARCHAR(255) NOT NULL,
+	`lemma` VARCHAR(512) NOT NULL,
 	PRIMARY KEY(`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
@@ -51,7 +51,7 @@ LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 CREATE TABLE `fastmorph_tags` (
 	`id` INT(5) NOT NULL,
 	`freq` INT(8) NOT NULL,
-	`combinations` VARCHAR(100) NOT NULL,
+	`combinations` VARCHAR(512) NOT NULL,
 	PRIMARY KEY(`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
@@ -62,7 +62,7 @@ LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 CREATE TABLE `fastmorph_tags_uniq` (
 	`id` INT(3) NOT NULL,
 	`freq` INT(8) NOT NULL,
-	`tag` VARCHAR(50) NOT NULL,
+	`tag` VARCHAR(256) NOT NULL,
 	PRIMARY KEY(`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
