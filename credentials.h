@@ -8,3 +8,4 @@
 #define DBUSER		""
 #define DBPASSWORD	""
 #define DBHOST		""
+#define KEY		""
