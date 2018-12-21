@@ -342,8 +342,6 @@ void * func_run_united(struct thread_data_united *);
 int prompt(void);
 void * func_run_socket(char *);
 int func_sort_tags(char *);
-void time_start(struct timeval *, struct timezone *);
-long time_stop(struct timeval *, struct timezone *);
 void func_realloc(void);
 void func_malloc(void);
 

@@ -1,3 +1,4 @@
+#include "time.h"
 
 /*
  * Get start time

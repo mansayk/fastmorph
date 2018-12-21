@@ -24,13 +24,15 @@
 #include <sys/socket.h>		/*   socket		   */
 #include <sys/un.h>		/*   socket		   */
 #include <unistd.h>		/*   write		   */
-#include <sys/time.h>		/*   gettimeofday	   */
+//#include <sys/time.h>		/*   gettimeofday	   */
 #include <mysql/mysql.h>	/*   MySQL and MariaDB	   */
-#include "jsmn-master/jsmn.h"	/*   JSON		   */
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
 #include <locale.h>		/*   for regcomp, regexec  */
 #include <regex.h>		/*   regcomp, regexec	   */
+#include "jsmn-master/jsmn.h"	/*   JSON		   */
 #include "b64/b64.h"		/*   base64		   */
+
+#include "time.h"		/*   			   */
 
 #include "fastmorph.h"
 #include "credentials.h"	/*   DB login, password... */
@@ -41,7 +43,7 @@
  *
  **************************************************************************************/
 
-#include "func_time.c"		/*    */
+//#include "func_time.c"		/*    */
 #include "func_jsmn.c"		/*    */
 #include "func_crypt.c"		/*    */
 #include "func_mysql.c"		/*    */

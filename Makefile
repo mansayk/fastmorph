@@ -20,7 +20,8 @@ CFLAGS     = -g \
 INCPATH    = -I mysql-connector-c/include
 LIBS       = -L/usr/lib64/mysql -l mysqlclient
 SOURCES    = jsmn-master/jsmn.c \
-	     b64/decode.c
+	     b64/decode.c \
+	     time.c
 FASTMORPH  = fastmorph
 FASTNGRAMS = fastngrams
 CLEAR      = clear
