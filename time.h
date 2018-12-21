@@ -1,7 +1,10 @@
-#ifndef __TIME_H_
-#define __TIME_H_
+#ifndef _TIME_H_
+#define _TIME_H_
 
-#include <sys/time.h>		/*   gettimeofday	   */
+#include <sys/time.h>
+
+struct timezone *tv;
+struct timeval *tz;
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,4 +25,4 @@ long time_stop(struct timeval *, struct timezone *);
 }
 #endif
 
-#endif /* __TIME_H_ */
+#endif /* _TIME_H_ */
