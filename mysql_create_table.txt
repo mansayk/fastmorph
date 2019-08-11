@@ -3,6 +3,18 @@
 CREATE DATABASE tatcorpus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
+
+
+
+USE         SET utf8mb4 COLLATE utf8mb4_unicode_ci        for all tables!!!!!!!
+https://stackoverflow.com/questions/1036454/what-are-the-diffrences-between-utf8-general-ci-and-utf8-unicode-ci
+
+
+
+
+
+
+
 CREATE TABLE `fastmorph_main` (
 	`id` INT(9) NOT NULL,
 	`united` INT(7) UNSIGNED NOT NULL,

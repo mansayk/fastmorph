@@ -8,6 +8,3 @@ git fetch --all
 
 git checkout master
 git pull origin master
-
-
-

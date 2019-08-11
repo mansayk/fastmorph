@@ -732,12 +732,12 @@ void * func_run_cycle(struct thread_data *thdata)
 /*
  * 
  */
-void func_on_socket_event()
+void func_on_socket_event(char *bufin)
 {
 	struct timeval tv1, tv2, tv3, tv4; // different counters
 	struct timezone tz;
 	unsigned int t;
-	char bufin[SOCKET_BUFFER_SIZE];
+	//char bufin[SOCKET_BUFFER_SIZE];
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
 	unsigned int progress; // The position of last returned sentence in 'found_all'
