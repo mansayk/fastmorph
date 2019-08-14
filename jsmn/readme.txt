@@ -1,10 +1,3 @@
-jsmn.h and jsmn.c files should be placed in this directory!
-
-https://github.com/zserge/jsmn
-
-git init
-git remote add origin https://github.com/zserge/jsmn.git
-git fetch --all
-
-git checkout master
-git pull origin master
+# jsmn.h file should be placed in this directory!
+# git clone https://github.com/zserge/jsmn.git .
+curl https://raw.githubusercontent.com/zserge/jsmn/master/jsmn.h -o jsmn.h
