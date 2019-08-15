@@ -5,7 +5,8 @@
 /*
  * Get start time
  */
-void time_start(struct timeval *tv) {
+void time_start(struct timeval *tv)
+{
 	gettimeofday(tv, NULL);
 }
 
@@ -13,7 +14,6 @@ void time_start(struct timeval *tv) {
  * Get finish time and calculate the difference
  */
 long time_stop(struct timeval *tv)
-
 {
   struct timeval tv2, dtv;
   gettimeofday(&tv2, NULL);
