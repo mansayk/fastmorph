@@ -1,5 +1,3 @@
-# Fastmorph
-
 *_
 *[0-9]
 
@@ -15,6 +13,14 @@ b64/*.h
 
 fastmorph
 fastngrams
+
+credentials.h
+
+*.doc
+*.docx
+*.fodt
+*.html
+*.htm
 
 
 # Prerequisites
