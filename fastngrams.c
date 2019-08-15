@@ -32,7 +32,7 @@
 #include "jsmn-master/jsmn.h"	/*   JSON		   */
 #include "b64/b64.h"		/*   base64		   */
 
-#include "time.h"		/*   			   */
+#include "point_of_time.h"      /*   			   */
 
 #include "fastmorph.h"
 #include "credentials.h"	/*   DB login, password... */
@@ -735,7 +735,6 @@ void * func_run_cycle(struct thread_data *thdata)
 void func_on_socket_event(char *bufin)
 {
 	struct timeval tv1, tv2, tv3, tv4; // different counters
-	struct timezone tz;
 	unsigned int t;
 	//char bufin[SOCKET_BUFFER_SIZE];
 	char bufout[SOCKET_BUFFER_SIZE];
@@ -746,7 +745,7 @@ void func_on_socket_event(char *bufin)
 	
 	
 	// Initial search time value
-	time_start(&tv1, &tz);
+	time_start(&tv1);
 
 	printf("\n-----------------------------------------------------------------");
 	printf("\nRead %u bytes: %.*s\n", rc, rc, bufin);
@@ -763,7 +762,7 @@ void func_on_socket_event(char *bufin)
 	// Set the initial value of counters
 	found_limit = return_ngrams;
 
-	time_start(&tv2, &tz);
+	time_start(&tv2);
 	// Find ids and set masks for all search words, lemmas, tags and patterns
 	for(t = 0; t < params; t++) {
 		if(word[t][0]) {
@@ -777,9 +776,9 @@ void func_on_socket_event(char *bufin)
 		if(tags[t][0])
 			func_sort_tags(tags[t]);
 	}
-	printf("\n\nszExactMatch() time: %ld milliseconds.", time_stop(&tv2, &tz));
+	printf("\n\nszExactMatch() time: %ld milliseconds.", time_stop(&tv2));
 
-	time_start(&tv3, &tz);
+	time_start(&tv3);
 	// broadcast to workers to work
 	pthread_mutex_lock(&mutex_united);
 	finished_united = SEARCH_THREADS;
@@ -790,7 +789,7 @@ void func_on_socket_event(char *bufin)
 	while(finished_united)
 		pthread_cond_wait(&cond2_united, &mutex2_united);
 	pthread_mutex_unlock(&mutex2_united);
-	printf("\nThreads func_run_united time: %ld milliseconds.", time_stop(&tv3, &tz));
+	printf("\nThreads func_run_united time: %ld milliseconds.", time_stop(&tv3));
 
 	// Sending JSON string over socket file
 	strncpy(bufout, "{\"example\":[", SOCKET_BUFFER_SIZE - 1);
@@ -804,7 +803,7 @@ void func_on_socket_event(char *bufin)
 		}
 	}
 
-	time_start(&tv4, &tz);
+	time_start(&tv4);
 	// broadcast to workers to work
 	pthread_mutex_lock(&mutex);
 	finished = SEARCH_THREADS;
@@ -815,7 +814,7 @@ void func_on_socket_event(char *bufin)
 	while(finished)
 		pthread_cond_wait(&cond2, &mutex2);
 	pthread_mutex_unlock(&mutex2);
-	printf("\nThreads func_run_cycle time: %ld milliseconds.", time_stop(&tv4, &tz));
+	printf("\nThreads func_run_cycle time: %ld milliseconds.", time_stop(&tv4));
 
 	// Summ amount of found occurences and left ones from all threads
 	progress = 0;
@@ -862,7 +861,7 @@ void func_on_socket_event(char *bufin)
 			exit(-1);
 		}
 	}
-	printf("\nQuery processing time: %ld milliseconds.\n", time_stop(&tv1, &tz));
+	printf("\nQuery processing time: %ld milliseconds.\n", time_stop(&tv1));
 	
 	
 	

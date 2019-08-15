@@ -19,9 +19,8 @@ CFLAGS     = -g \
 	     #-march=bdver1 # For AMD FX-4100 processor
 INCPATH    = -I mysql-connector-c/include
 LIBS       = -L/usr/lib64/mysql -l mysqlclient
-SOURCES    = jsmn-master/jsmn.c \
-	     b64/decode.c \
-	     time.c
+SOURCES    = b64/decode.c \
+	     point_of_time.c
 FASTMORPH  = fastmorph
 FASTNGRAMS = fastngrams
 CLEAR      = clear
@@ -32,7 +31,7 @@ all: $(FASTMORPH) $(FASTNGRAMS)
 $(FASTMORPH): $(FASTMORPH).c clean
 	$(CLEAR)
 	$(CC) $(CFLAGS) $(INCPATH) $(LIBS) -o $(FASTMORPH) $(FASTMORPH).c $(SOURCES)
-	./$(FASTMORPH)
+#	./$(FASTMORPH)
 
 $(FASTNGRAMS): $(FASTNGRAMS).c clean
 	$(CLEAR)
