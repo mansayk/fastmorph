@@ -29,7 +29,7 @@
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
 #include <locale.h>		/*   for regcomp, regexec  */
 #include <regex.h>		/*   regcomp, regexec	   */
-#include "jsmn-master/jsmn.h"	/*   JSON		   */
+#include "jsmn/jsmn.h"		/*   JSON		   */
 #include "b64/b64.h"		/*   base64		   */
 
 #include "point_of_time.h"      /*   			   */

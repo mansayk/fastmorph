@@ -41,3 +41,4 @@ $(FASTNGRAMS): $(FASTNGRAMS).c clean
 clean:
 	$(RM) $(FASTMORPH) *~ .*~ /tmp/fastmorph.socket
 	$(RM) $(FASTNGRAMS) *~ .*~ /tmp/fastngrams.socket
+
