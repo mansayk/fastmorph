@@ -29,6 +29,8 @@
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
 #include <locale.h>		/*   for regcomp, regexec  */
 #include <regex.h>		/*   regcomp, regexec	   */
+#include <log4c.h>              /*   logging               */
+
 #include "jsmn/jsmn.h"		/*   JSON		   */
 #include "b64/b64.h"		/*   base64		   */
 
@@ -55,6 +57,7 @@
 
 
 
+log4c_category_t * logcat=NULL;   /* will be required for all log calls */
 
 
 
@@ -1552,6 +1555,15 @@ void func_on_socket_event(char *bufin)
  */
 int main()
 {
+  int rc;
+  /* initalizing log output */
+  if(rc=log4c_init()){
+    printf("log4c_init() failed\n");
+    return rc;
+  }
+  logcat=log4c_category_get("fastmorph");
+
+  
 	// set locale for regex functions
 	setlocale(LC_ALL, "ru_RU.UTF-8");
 
@@ -1606,15 +1618,16 @@ int main()
 	sem_init(&count_sem, 0, 1);
 
 	// run func_run_socket() in a thread
-	printf("\n\nCreating socket listening thread...");
+	//printf("\n\nCreating socket listening thread...");
+	log4c_category_log(logcat,LOG4C_PRIORITY_INFO,"Creating socket listening thread...");
 	pthread_t thread; // thread identifier
 	pthread_attr_t attr; // thread attributes
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED); // run in detached mode
 	int rc_thread = pthread_create(&thread, &attr, (void *) &func_run_socket, FASTMORPH_UNIX_DOMAIN_SOCKET);
 	if(rc_thread){
-		printf("\n  ERROR: return code from pthread_create() is %d", rc_thread);
-		exit(-1);
+	  log4c_category_log(logcat,LOG4C_PRIORITY_ERROR,"ERROR: return code from pthread_create() is %d", rc_thread);
+	  return -1;
 	}
 
 	// Show 'exit' message in a couple of seconds
@@ -1627,5 +1640,8 @@ int main()
 	free(list_words);
 	free(list_lemmas);
 	free(list_tags);
+	
+	if(log4c_fini())
+	  printf("log4c_fini() failed");
 	return 0;
 }

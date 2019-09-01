@@ -18,7 +18,7 @@ CFLAGS     = -g \
 	     -mcmodel=large
 	     #-march=bdver1 # For AMD FX-4100 processor
 INCPATH    = -I mysql-connector-c/include
-LIBS       = -L/usr/lib64/mysql -l mysqlclient
+LIBS       = -L/usr/lib64/mysql -l mysqlclient -l log4c
 SOURCES    = b64/decode.c \
 	     point_of_time.c
 FASTMORPH  = fastmorph
