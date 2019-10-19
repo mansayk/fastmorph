@@ -15,7 +15,7 @@
 
 #define VERSION				"Version v5.8.0 - 2018.12.13"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
-#define TEST_MODE			1					/*   TEST mode									*/
+//#define TEST_MODE			1					/*   TEST mode									*/
 
 #define SOURCE				0					/*   id of sources full								*/
 #define WORD				0					/*   id of words								*/
@@ -49,28 +49,28 @@
 
 /********** CORPUS SPECIFIC *************************************************************************************************************************************/
 
-#define SEARCH_THREADS			2					/*   Threads count to perform search: depends on CPU cores.			*/
+#define SEARCH_THREADS			1					/*   Threads count to perform search: depends on CPU cores.			*/
 
 
 
 
 
 
-#define SOURCES_ARRAY_SIZE		16787					/*   Size of sources arrays							*/
-#define TAGS_ARRAY_SIZE			23603					/*   Size of tags combinations array						*/
-#define TAGS_UNIQ_ARRAY_SIZE		139					/*   Amount of uniq tags	 						*/
-#define WORDS_ARRAY_SIZE		4279435					/*   Size of words array							*/
-#define WORDS_CASE_ARRAY_SIZE		4979752					/*   Size of words (case sensitive)						*/
-#define LEMMAS_ARRAY_SIZE		3347482					/*   Size of lemmas array							*/
-#define UNITED_ARRAY_SIZE		5704397					/*   Size of united array							*/
+#define SOURCES_ARRAY_SIZE		17875					/*   Size of sources arrays							*/
+#define TAGS_ARRAY_SIZE			24772					/*   Size of tags combinations array						*/
+#define TAGS_UNIQ_ARRAY_SIZE		154					/*   Amount of uniq tags	 						*/
+#define WORDS_ARRAY_SIZE		5324171					/*   Size of words array							*/
+#define WORDS_CASE_ARRAY_SIZE		6143622					/*   Size of words (case sensitive)						*/
+#define LEMMAS_ARRAY_SIZE		4192157					/*   Size of lemmas array							*/
+#define UNITED_ARRAY_SIZE		6605666					/*   Size of united array							*/
 
 #if defined TEST_MODE
 #define AMOUNT_SENTENCES		10211					/*   Amount of sentences	TEST						*/
 #define SIZE_ARRAY_MAIN			(99996 + SOURCES_ARRAY_SIZE + AMOUNT_SENTENCES)
 										/*   Size of array_main		TEST						*/
 #else
-#define AMOUNT_SENTENCES		40443091				/*   Amount of sentences							*/
-#define SIZE_ARRAY_MAIN			(430972027 + SOURCES_ARRAY_SIZE + AMOUNT_SENTENCES)
+#define AMOUNT_SENTENCES		53924910				/*   Amount of sentences							*/
+#define SIZE_ARRAY_MAIN			(618307555 + SOURCES_ARRAY_SIZE + AMOUNT_SENTENCES)
 										/*   Size of array_main								*/
 #endif
 
@@ -103,13 +103,13 @@
 //#define NGRAMS5_ARRAY_SIZE		199620256				/*   Size of 5-grams array							*/
 //#define NGRAMS6_ARRAY_SIZE		185628604				/*   Size of 6-grams array							*/
 // WO_PUNCT:
-#define NGRAMS_ARRAY_SIZE		433958261				/*   Size of the whole ngrams array						*/
-#define NGRAMS1_ARRAY_SIZE		5704346					/*   Size of 1-grams array							*/
-#define NGRAMS2_ARRAY_SIZE		66265427				/*   Size of 2-grams array							*/
-#define NGRAMS3_ARRAY_SIZE		110879617				/*   Size of 3-grams array							*/
-#define NGRAMS4_ARRAY_SIZE		103755860				/*   Size of 4-grams array							*/
-#define NGRAMS5_ARRAY_SIZE		83269742				/*   Size of 5-grams array							*/
-#define NGRAMS6_ARRAY_SIZE		64083269				/*   Size of 6-grams array							*/
+#define NGRAMS_ARRAY_SIZE		519870292				/*   Size of the whole ngrams array						*/
+#define NGRAMS1_ARRAY_SIZE		6605612					/*   Size of 1-grams array							*/
+#define NGRAMS2_ARRAY_SIZE		73391850				/*   Size of 2-grams array							*/
+#define NGRAMS3_ARRAY_SIZE		131134941				/*   Size of 3-grams array							*/
+#define NGRAMS4_ARRAY_SIZE		126630377				/*   Size of 4-grams array							*/
+#define NGRAMS5_ARRAY_SIZE		102765885				/*   Size of 5-grams array							*/
+#define NGRAMS6_ARRAY_SIZE		79341627				/*   Size of 6-grams array							*/
 #endif
 
 

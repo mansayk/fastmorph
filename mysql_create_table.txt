@@ -2,100 +2,10 @@
 
 CREATE DATABASE tatcorpus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
-
-
-
 USE         SET utf8mb4 COLLATE utf8mb4_unicode_ci        for all tables!!!!!!!
 https://stackoverflow.com/questions/1036454/what-are-the-diffrences-between-utf8-general-ci-and-utf8-unicode-ci
 
-
-
-
-
-
-
-CREATE TABLE `fastmorph_main` (
-	`id` INT(9) NOT NULL,
-	`united` INT(7) UNSIGNED NOT NULL,
-	`sentence` INT(8) NOT NULL,
-	`source` INT(5) NOT NULL,
-	PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.main.txt' INTO TABLE fastmorph_main CHARACTER SET UTF8 (id, united, sentence, source);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
-
-CREATE TABLE `fastmorph_words_case` (
-	`id` INT(7) NOT NULL,
-	`freq` INT(7) NOT NULL,
-	`word_case` VARCHAR(512) NOT NULL,
-	PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.words_case.txt' INTO TABLE fastmorph_words_case CHARACTER SET UTF8 (id, freq, word_case);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
-
-CREATE TABLE `fastmorph_words` (
-	`id` INT(7) NOT NULL,
-	`freq` INT(7) NOT NULL,
-	`word` VARCHAR(512) NOT NULL,
-	PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.words.txt' INTO TABLE fastmorph_words CHARACTER SET UTF8 (id, freq, word);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
-
-CREATE TABLE `fastmorph_lemmas` (
-	`id` INT(6) NOT NULL,
-	`freq` INT(7) NOT NULL,
-	`lemma` VARCHAR(512) NOT NULL,
-	PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.lemmas.txt' INTO TABLE fastmorph_lemmas CHARACTER SET UTF8 (id, freq, lemma);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
-
-CREATE TABLE `fastmorph_tags` (
-	`id` INT(5) NOT NULL,
-	`freq` INT(8) NOT NULL,
-	`combinations` VARCHAR(512) NOT NULL,
-	PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.tags.txt' INTO TABLE fastmorph_tags CHARACTER SET UTF8 (id, freq, combinations);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
-
-CREATE TABLE `fastmorph_tags_uniq` (
-	`id` INT(3) NOT NULL,
-	`freq` INT(8) NOT NULL,
-	`tag` VARCHAR(256) NOT NULL,
-	PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.tags-uniq.sorted.txt' INTO TABLE fastmorph_tags_uniq CHARACTER SET UTF8 (id, freq, tag);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
-
-CREATE TABLE
-    `fastmorph_united` (
-        `id` INT(7) NOT NULL,
-        `freq` INT(7) NOT NULL,
-        `word_case` INT(7) NOT NULL,
-        `word` INT(7) NOT NULL,
-        `lemma` INT(6) NOT NULL,
-        `tags` INT(5) NOT NULL,
-        PRIMARY KEY(`id`)
-) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
-
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.united.txt' INTO TABLE fastmorph_united CHARACTER SET UTF8 (id, freq, word_case, word, lemma, tags);
-LOAD DATA LOCAL INFILE '/var/lib/mysql/...
-
+#################################################################################################################################
 
 CREATE TABLE `fastmorph_sources` (
 	`id` int(5) NOT NULL,
@@ -112,7 +22,89 @@ CREATE TABLE `fastmorph_sources` (
 	PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/DATA/tatcorpus3/tatcorpus3.sources.txt' INTO TABLE fastmorph_sources CHARACTER SET UTF8 (id, nice, author, title, date, type, genre, source, url, meta, full);
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/DATA/tatcorpus4/tatcorpus4.sources.txt' INTO TABLE fastmorph_sources CHARACTER SET UTF8 (id, nice, author, title, date, type, genre, source, url, meta, full);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE `fastmorph_tags` (
+	`id` INT(5) NOT NULL,
+	`freq` INT(8) NOT NULL,
+	`combinations` VARCHAR(512) NOT NULL,
+	PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.tags.txt' INTO TABLE fastmorph_tags CHARACTER SET UTF8 (id, freq, combinations);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE `fastmorph_tags_uniq` (
+	`id` INT(3) NOT NULL,
+	`freq` INT(8) NOT NULL,
+	`tag` VARCHAR(256) NOT NULL,
+	PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.tags-uniq.sorted.txt' INTO TABLE fastmorph_tags_uniq CHARACTER SET UTF8 (id, freq, tag);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE `fastmorph_lemmas` (
+	`id` INT(6) NOT NULL,
+	`freq` INT(7) NOT NULL,
+	`lemma` VARCHAR(2048) NOT NULL,
+	PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.lemmas.txt' INTO TABLE fastmorph_lemmas CHARACTER SET UTF8 (id, freq, lemma);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE `fastmorph_words` (
+	`id` INT(7) NOT NULL,
+	`freq` INT(7) NOT NULL,
+	`word` VARCHAR(2048) NOT NULL,
+	PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.words.txt' INTO TABLE fastmorph_words CHARACTER SET UTF8 (id, freq, word);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE `fastmorph_words_case` (
+	`id` INT(7) NOT NULL,
+	`freq` INT(7) NOT NULL,
+	`word_case` VARCHAR(2048) NOT NULL,
+	PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.words_case.txt' INTO TABLE fastmorph_words_case CHARACTER SET UTF8 (id, freq, word_case);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE
+    `fastmorph_united` (
+        `id` INT(7) NOT NULL,
+        `freq` INT(7) NOT NULL,
+        `word_case` INT(7) NOT NULL,
+        `word` INT(7) NOT NULL,
+        `lemma` INT(6) NOT NULL,
+        `tags` INT(5) NOT NULL,
+        PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.united.txt' INTO TABLE fastmorph_united CHARACTER SET UTF8 (id, freq, word_case, word, lemma, tags);
+LOAD DATA LOCAL INFILE '/var/lib/mysql/...
+
+
+CREATE TABLE `fastmorph_main` (
+	`id` INT(9) NOT NULL,
+	`united` INT(7) UNSIGNED NOT NULL,
+	`sentence` INT(8) NOT NULL,
+	`source` INT(5) NOT NULL,
+	PRIMARY KEY(`id`)
+) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastmorph_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.main.txt' INTO TABLE fastmorph_main CHARACTER SET UTF8 (id, united, sentence, source);
 LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 
 ----------------------------------------------------------------
@@ -131,10 +123,10 @@ CREATE TABLE `fastngrams_ngrams` (
 ) ENGINE=MyISAM DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
 With punctuation:
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastngrams_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.main.ngrams.sorted.txt' INTO TABLE fastngrams_ngrams CHARACTER SET UTF8 FIELDS TERMINATED BY " " (level, node, parentnode, united, freq);
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastngrams_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.main.ngrams.sorted.txt' INTO TABLE fastngrams_ngrams CHARACTER SET UTF8 FIELDS TERMINATED BY " " (level, node, parentnode, united, freq);
 LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 Without punctuation:
-LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastngrams_tables_generator/tatcorpus3.sentences.apertium.tagged.fastmorph.main.wopunct.ngrams.sorted.txt' INTO TABLE fastngrams_ngrams CHARACTER SET UTF8 FIELDS TERMINATED BY " " (level, node, parentnode, united, freq);
+LOAD DATA LOCAL INFILE '/home/mansur/TATCORPUS/TOOLS/Fastngrams_tables_generator/tatcorpus4.sentences.apertium.tagged.fastmorph.main.wopunct.ngrams.sorted.txt' INTO TABLE fastngrams_ngrams CHARACTER SET UTF8 FIELDS TERMINATED BY " " (level, node, parentnode, united, freq);
 LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 
 ----------------------------------------------------------------
@@ -142,7 +134,7 @@ LOAD DATA LOCAL INFILE '/var/lib/mysql/...
 # SKIP FIRST LINE
 LOAD DATA LOCAL INFILE '/home/mansur/file.txt' INTO TABLE morph6_united_apertium     CHARACTER SET UTF8      IGNORE 1 LINES   (id, freq, word_case, word, lemma, tags);
     
-############################################################################################################################
+#################################################################################################################################
 
 CREATE TABLE `black_list` (
 	`id` int(11) NOT NULL AUTO_INCREMENT,

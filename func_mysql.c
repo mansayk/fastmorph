@@ -4,7 +4,7 @@
  */
 int func_connect_mysql(MYSQL *myconnect)
 {
-	printf("MySQL: ");
+	printf("\nMySQL: ");
 	mysql_init(myconnect);
 	if(!mysql_real_connect(myconnect, DBHOST, DBUSER, DBPASSWORD, DB, 3306, NULL, 0)) {
 		printf("\n  ***ERROR: Cannot connect to MySQL: \n");
