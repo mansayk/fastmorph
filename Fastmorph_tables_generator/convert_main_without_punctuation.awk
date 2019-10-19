@@ -25,9 +25,7 @@ BEGIN {
 		$8 == "<invquest>" || 
 		$8 == "<punct>") {
 		sent = (int(sent) + 1);
-		#print $1 "\t" $2 "\t" "-1" "\t" $4;
 	} else {
-		#print $1 "\t" $2 "\t" sent "\t" $4;
 		print $1 "\t" $2 "\t" sent;
 	}
 }

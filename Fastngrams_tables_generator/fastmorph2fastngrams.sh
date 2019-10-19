@@ -1,14 +1,19 @@
 #/bin/bash
 
+#################################################################
+#
+# Convert fastmorph compatible data into fastngrams compatible
+#
+#################################################################
+
 echo "Don't forget to set up additional swap if your RAM is not enough:"
-echo " dd if=/dev/zero of=/mnt/DATA700/swap bs=1G count=6"
-echo " mkswap /mnt/DATA700/swap"
-echo " swapon /mnt/DATA700/swap"
+echo " dd if=/dev/zero of=/FSWAP bs=1G count=20"
+echo " mkswap /FSWAP"
+echo " swapon /FSWAP"
 read -p "Press enter to continue"
 
-declare -i begin=30	# Begin from
-declare -i step=100000	# Increment by
-declare -i max=6000000	# Amount of possible united elements
+declare -i begin=0	# Begin from
+declare -i max=7000000	# Amount of possible united elements
 declare -i i=1		# Should not be 0
 declare -i e=0
 
@@ -32,42 +37,67 @@ if [[ -f "$output" ]] ; then
 	rm -f "$output"
 fi
 
-# Adaptation for my low resource maschine
-for s in `seq 0 2 29`; do
-	if [[ $i -eq 29 ]] ; then
-		e=$((s + 2))
-	else
-		e=$((s + 2 - 1))
-	fi
-	echo "NEXT: $i, begin: $begin, step: $step, max: $max, s: $s, e: $e"
-	if [[ "$mode" == "tree" ]] ; then
-		if [[ -f "$output" ]] ; then
-			i=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
-		fi
-		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -t -i $i -s $s -e $e | sed '/^ *$/d' >> "$output"
-	else
-		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -s $s -e $e | sed '/^ *$/d' >> "$output"
-	fi
-	#exit 1
-done
 
-for s in `seq $begin $step $max`; do
-	if [[ $i -eq $max ]] ; then
-		e=$((s + step))
-	else
-		e=$((s + step - 1))
-	fi
-	echo "NEXT: $i, begin: $begin, step: $step, max: $max, s: $s, e: $e"
-	if [[ "$mode" == "tree" ]] ; then
-		if [[ -f "$output" ]] ; then
-			i=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
-		fi
-		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -t -i $i -s $s -e $e | sed '/^ *$/d' >> "$output"
-	else
-		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -s $s -e $e | sed '/^ *$/d' >> "$output"
-	fi
-	#exit 1
-done
+#############################################
+# PARSE: for low resource machine
+#############################################
+#
+#declare -i begin=30	# Begin from
+#declare -i step=100000	# Increment by
+#declare -i max=7000000	# Amount of possible united elements
+#declare -i i=1		# Should not be 0
+#declare -i e=0
+#
+#bg=0
+#st=1
+#mx=29
+#for s in `seq $bg $st $mx`; do
+#	if [[ $i -eq $mx ]] ; then
+#		e=$((s + st))
+#	else
+#		e=$((s + st - 1))
+#	fi
+#	echo "NEXT: $i, begin: $bg, step: $st, max: $mx, s: $s, e: $e"
+#	if [[ "$mode" == "tree" ]] ; then
+#		if [[ -f "$output" ]] ; then
+#			i=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
+#		fi
+#		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -t -i $i -s $s -e $e | sed '/^ *$/d' >> "$output"
+#	else
+#		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -s $s -e $e | sed '/^ *$/d' >> "$output"
+#	fi
+#	#exit 1
+#done
+
+#for s in `seq $begin $step $max`; do
+#	if [[ $i -eq $max ]] ; then
+#		e=$((s + step))
+#	else
+#		e=$((s + step - 1))
+#	fi
+#	echo "NEXT: $i, begin: $begin, step: $step, max: $max, s: $s, e: $e"
+#	if [[ "$mode" == "tree" ]] ; then
+#		if [[ -f "$output" ]] ; then
+#			i=$(tail -n 1 "$output" | sed -r 's/^ *#Next free id:([1234567890]+)$/\1/')
+#		fi
+#		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -t -i $i -s $s -e $e | sed '/^ *$/d' >> "$output"
+#	else
+#		bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -s $s -e $e | sed '/^ *$/d' >> "$output"
+#	fi
+#	#exit 1
+#done
+
+
+#############################################
+# PARSE: If you have much RAM
+#############################################
+
+bzcat "$1" | awk '{print $2 "," $3}' | ./parse -q -t -i $i -s $begin -e $max | sed '/^ *$/d' >> "$output"
+
+
+#############################################
+# SORT: Much RAM is needed
+#############################################
 
 ./sortngram < "$output" -o "$output_sorted"
 

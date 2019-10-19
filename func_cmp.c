@@ -39,6 +39,9 @@ int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, cha
 	regex_t start_state;
 	char pattern_enclosed[WORDS_BUFFER_SIZE];
 
+	if(DEBUG)
+		printf("func_regex pattern: %s\n", pattern);
+
 	// Add ^...$
 	pattern_enclosed[0] = '\0';
 	if(pattern[0] != '^')
@@ -132,6 +135,9 @@ int func_szWildMatch(const char match[WORDS_BUFFER_SIZE], const int mask_offset,
 	char a;
 	int star;
 	register const char *str, *pat, *s, *p;
+
+	if(DEBUG)
+		printf("\nfunc_szWildMatch() match: %s; united_begin: %lld; united_end: %lld;\n", match, united_begin, united_end);
 
 	for(unsigned long long i = united_begin; i < united_end; i++) {
 		// Alessandro Felice Cantatore

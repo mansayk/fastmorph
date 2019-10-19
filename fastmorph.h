@@ -35,7 +35,7 @@
 #define EXTEND_RANGE_MAX		10					/*   Max limit for expanding context						*/
 #define EXTEND_RANGE_DEFAULT		2					/*   Default value for expanding context					*/
 #define TAGS_UNIQ_BUFFER_SIZE		32					/*   Length of buffer for uniq tags 						*/
-#define WORDS_BUFFER_SIZE		140					/*   Buffer size for words (strings)						*/
+#define WORDS_BUFFER_SIZE		1024					/*   Buffer size for words (strings)						*/
 
 // HTML tags for highlighting words
 #define FOUND_HTML_OPEN		"<span class='found_word' id='found_word_%d' title='(%s%s) %s'>"	/*   escaping '\' if lemma is '"', lemma utself, tag	*/
@@ -67,11 +67,9 @@
 #if defined TEST_MODE
 #define AMOUNT_SENTENCES		10211					/*   Amount of sentences	TEST						*/
 #define SIZE_ARRAY_MAIN			(99996 + SOURCES_ARRAY_SIZE + AMOUNT_SENTENCES)
-										/*   Size of array_main		TEST						*/
 #else
 #define AMOUNT_SENTENCES		53924910				/*   Amount of sentences							*/
 #define SIZE_ARRAY_MAIN			(618307555 + SOURCES_ARRAY_SIZE + AMOUNT_SENTENCES)
-										/*   Size of array_main								*/
 #endif
 
 #if defined TEST_MODE
@@ -85,13 +83,13 @@
 //#define NGRAMS5_ARRAY_SIZE		199620256				/*   Size of 5-grams array		TEST					*/
 //#define NGRAMS6_ARRAY_SIZE		185628604				/*   Size of 6-grams array		TEST					*/
 // WO_PUNCT:
-#define NGRAMS_ARRAY_SIZE		2000000					/*   Size of the whole ngrams array	TEST					*/
-#define NGRAMS1_ARRAY_SIZE		1000000					/*   Size of 1-grams array		TEST					*/
-#define NGRAMS2_ARRAY_SIZE		1000000					/*   Size of 2-grams array		TEST					*/
-#define NGRAMS3_ARRAY_SIZE		1000000					/*   Size of 3-grams array		TEST					*/
-#define NGRAMS4_ARRAY_SIZE		1000000					/*   Size of 4-grams array		TEST					*/
-#define NGRAMS5_ARRAY_SIZE		1000000					/*   Size of 5-grams array		TEST					*/
-#define NGRAMS6_ARRAY_SIZE		1000000					/*   Size of 6-grams array		TEST					*/
+#define NGRAMS_ARRAY_SIZE		20000000					/*   Size of the whole ngrams array	TEST					*/
+#define NGRAMS1_ARRAY_SIZE		10000000					/*   Size of 1-grams array		TEST					*/
+#define NGRAMS2_ARRAY_SIZE		10000000					/*   Size of 2-grams array		TEST					*/
+#define NGRAMS3_ARRAY_SIZE		10000000					/*   Size of 3-grams array		TEST					*/
+#define NGRAMS4_ARRAY_SIZE		10000000					/*   Size of 4-grams array		TEST					*/
+#define NGRAMS5_ARRAY_SIZE		10000000					/*   Size of 5-grams array		TEST					*/
+#define NGRAMS6_ARRAY_SIZE		10000000					/*   Size of 6-grams array		TEST					*/
 #else
 // WITH_PUNCT:
 //#define NGRAMS_ARRAY_SIZE		829273910				/*   Size of the whole ngrams array						*/

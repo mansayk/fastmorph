@@ -31,12 +31,12 @@ all: $(FASTMORPH) $(FASTNGRAMS)
 $(FASTMORPH): $(FASTMORPH).c clean
 	$(CLEAR)
 	$(CC) $(CFLAGS) $(INCPATH) $(LIBS) -o $(FASTMORPH) $(FASTMORPH).c $(SOURCES)
-	./$(FASTMORPH)
+#	./$(FASTMORPH)
 
 $(FASTNGRAMS): $(FASTNGRAMS).c clean
 	$(CLEAR)
 	$(CC) $(CFLAGS) $(INCPATH) $(LIBS) -o $(FASTNGRAMS) $(FASTNGRAMS).c $(SOURCES)
-	./$(FASTNGRAMS)
+#	./$(FASTNGRAMS)
 
 clean:
 	$(RM) $(FASTMORPH) *~ .*~ /tmp/fastmorph.socket

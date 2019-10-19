@@ -1,4 +1,59 @@
 
+
+
+
+
+/*
+ * Finding search distances for each thread united
+ */
+/*
+int func_find_distances_for_threads_united()
+{
+	printf("\n\nSearch distances for each thread united:");
+	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
+
+	for(int x = 0; x < SEARCH_THREADS; x++) {
+		thread_data_array_united[x].finish = x * min_part + min_part - 1;
+		if(x == 0) {
+			thread_data_array_united[x].start = 0;
+		} else {
+			thread_data_array_united[x].start = (thread_data_array_united[x-1].finish + 1);
+		}
+		if(x == SEARCH_THREADS - 1) {
+			thread_data_array_united[x].finish = UNITED_ARRAY_SIZE - 1;
+		}
+		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
+	}
+	return 0;
+}
+*/
+int func_find_distances_for_threads_united()
+{
+	printf("\n\nSearch distances for each thread united:");
+	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
+	
+	// first
+	thread_data_array_united[0].start = 0;
+
+	for(int x = 0; x < SEARCH_THREADS; x++) {
+		thread_data_array_united[x].finish = x * min_part + min_part - 1;
+		if(x != 0) {
+			thread_data_array_united[x].start = (thread_data_array_united[x-1].finish + 1);
+		}
+		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
+	}
+	// last
+	thread_data_array_united[SEARCH_THREADS - 1].finish = UNITED_ARRAY_SIZE - 1;
+	return 0;
+}
+
+
+
+
+
+
+
+
 /*
  * Run search united
  */

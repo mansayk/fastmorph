@@ -153,6 +153,7 @@ int func_read_mysql()
 							array_ngrams2[0][node] = united;
 							array_ngrams2[1][node] = freq;
 							array_ngrams2[2][node] = parent;
+							//printf(":::%d", united);
 						} else if(level == 3) {
 							array_ngrams3[0][node] = united;
 							array_ngrams3[1][node] = freq;
@@ -203,10 +204,10 @@ int func_find_distances_for_threads()
 /*
  * Finding search distances for each thread united
  */
-int func_find_distances_for_threads_united()
+/*int func_find_distances_for_threads_united()
 {
 	return 0;
-}
+}*/
 
 
 /*
@@ -219,6 +220,10 @@ int func_build_ngrams(unsigned int z)
 	int freq;
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
+
+
+
+
 
 	// id
 	strncpy(bufout, "{\"id\":", SOCKET_BUFFER_SIZE - 1);
@@ -564,11 +569,29 @@ void * func_run_cycle(struct thread_data *thdata)
 				}
 				break;
 			case 2:
+				//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d:=:%lld", found_limit, search_types & 0xFF);
 				main_end = NGRAMS2_ARRAY_SIZE;
 				while(z < main_end) {
+					//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:0:%lld:%lld", found_limit, united_mask[array_ngrams1[0][z]], united_mask[array_ngrams2[0][z]]);
+
+					/*
+					if(	(united_mask[array_ngrams1[0][z]] & 0xFF) == (search_types & 0xFF))
+					{
+						printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:1:%lld", found_limit, search_types & 0xFF);
+						printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:2::%lld:%lld", found_limit, (united_mask[array_ngrams2[0][z]] & 0xFF00), search_types & 0xFF00);
+						if(	(united_mask[array_ngrams2[0][z]] & 0xFF00) == (search_types & 0xFF00))
+						{
+							printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:3:%lld", found_limit, search_types & 0xFF00);
+						}
+					}
+					*/
+
+
+
 					if(	(united_mask[array_ngrams2[0][z]] & 0xFF00) == (search_types & 0xFF00) &&	(t = array_ngrams2[2][z]) &&
 						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
 					{
+						//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d", found_limit);
 						if(found_limit) {
 							func_build_ngrams(z);
 							--found_limit;
@@ -583,6 +606,7 @@ void * func_run_cycle(struct thread_data *thdata)
 				while(z < main_end) {
 					if(	(united_mask[array_ngrams1[0][z]] & 0xFF) == (search_types & 0xFF))
 					{
+						//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d:%lld", found_limit, search_types & 0xFF);
 						if(found_limit) {
 							func_build_ngrams(z);
 							//printf("\n->%d", array_ngrams1[0][z]);
@@ -763,7 +787,7 @@ void func_on_socket_event(char *bufin)
 	found_limit = return_ngrams;
 
 	time_start(&tv2);
-	// Find ids and set masks for all search words, lemmas, tags and patterns
+	// Find ids and set masks for all search words, lemmas, tags and patterns TODO: Move this part to separate file, because it is common for fastmorph.c too!!!
 	for(t = 0; t < params; t++) {
 		if(word[t][0]) {
 			if(case_sensitive[t])

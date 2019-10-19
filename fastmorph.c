@@ -487,7 +487,7 @@ int func_find_distances_for_threads_united()
 	return 0;
 }
 */
-int func_find_distances_for_threads_united()
+/*int func_find_distances_for_threads_united()
 {
 	printf("\n\nSearch distances for each thread united:");
 	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
@@ -505,7 +505,7 @@ int func_find_distances_for_threads_united()
 	// last
 	thread_data_array_united[SEARCH_THREADS - 1].finish = UNITED_ARRAY_SIZE - 1;
 	return 0;
-}
+}*/
 
 
 /*

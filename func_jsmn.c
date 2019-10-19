@@ -196,9 +196,12 @@ int func_jsmn_json(char *strin, int len)
 			buf[t[i+1].end - t[i+1].start] = '\0';
 			errno = 0;
 			return_sentences = strtol(buf, &ptr, 10);
-			// Check for ranges
+			// Check for ranges TODO: Merge variables return_sentences and return_ngrams into one???
 			if(return_sentences < 1 || return_sentences > 1000) {
 				return_sentences = FOUND_SENTENCES_LIMIT_DEFAULT;
+			}
+			if(return_ngrams < 1 || return_ngrams > 1000) {
+				return_ngrams = FOUND_NGRAMS_LIMIT_DEFAULT;
 			}
 			// Check for various possible errors
 			if(errno == ERANGE)
