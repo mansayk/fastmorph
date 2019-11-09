@@ -13,7 +13,7 @@
 
 /********** GLOBAL **********************************************************************************************************************************************/
 
-#define VERSION				"Version v5.8.0 - 2018.12.13"		/*   Version and date								*/
+#define VERSION				"Version v5.9.0 - 2019.11.09"		/*   Version and date								*/
 #define DEBUG				0					/*   Output additional debugging info						*/
 //#define TEST_MODE			1					/*   TEST mode									*/
 
@@ -25,7 +25,6 @@
 #define WILD_LEMMA			4					/*   id of wildmatch lemmas							*/
 #define SEARCH_TYPES_OFFSET		8					/*   search_types -> 0-7, 8-15, 16-23, 24-31, 32-39, 40-47 bits; 48-63 are free */
 #define SOURCE_TYPES_BUFFER_SIZE	64					/*   Length of buffer for source types (book, www...ru)				*/
-//#define SOURCES_ARRAY_SIZE		2750					/*   Size of sources arrays							*/
 #define SOURCE_OFFSET			-2000000000				/*   Offset for the source value in the main array to differ it from sent begin */
 #define MYSQL_LOAD_LIMIT		1000000					/*   Portions to load from MySQL: SELECT ... LIMIT 100000			*/
 #define FOUND_SENTENCES_LIMIT_DEFAULT	100					/*   Amount of found sentences to collect					*/
@@ -51,11 +50,6 @@
 
 #define SEARCH_THREADS			1					/*   Threads count to perform search: depends on CPU cores.			*/
 
-
-
-
-
-
 #define SOURCES_ARRAY_SIZE		17875					/*   Size of sources arrays							*/
 #define TAGS_ARRAY_SIZE			24772					/*   Size of tags combinations array						*/
 #define TAGS_UNIQ_ARRAY_SIZE		154					/*   Amount of uniq tags	 						*/
@@ -73,27 +67,16 @@
 #endif
 
 #if defined TEST_MODE
-// WITH_PUNCT:
-//#define NGRAMS_ARRAY_SIZE		829273910				/*   Size of the whole ngrams array	TEST					*/
-////#define NGRAMS_ARRAY_SIZE		8292739					/*   Size of the whole ngrams array	TEST					*/
-//#define NGRAMS1_ARRAY_SIZE		5704397					/*   Size of 1-grams array		TEST					*/
-//#define NGRAMS2_ARRAY_SIZE		73260916				/*   Size of 2-grams array		TEST					*/
-//#define NGRAMS3_ARRAY_SIZE		164210291				/*   Size of 3-grams array		TEST					*/
-//#define NGRAMS4_ARRAY_SIZE		200849446				/*   Size of 4-grams array		TEST					*/
-//#define NGRAMS5_ARRAY_SIZE		199620256				/*   Size of 5-grams array		TEST					*/
-//#define NGRAMS6_ARRAY_SIZE		185628604				/*   Size of 6-grams array		TEST					*/
-// WO_PUNCT:
-#define NGRAMS_ARRAY_SIZE		20000000					/*   Size of the whole ngrams array	TEST					*/
-#define NGRAMS1_ARRAY_SIZE		10000000					/*   Size of 1-grams array		TEST					*/
-#define NGRAMS2_ARRAY_SIZE		10000000					/*   Size of 2-grams array		TEST					*/
-#define NGRAMS3_ARRAY_SIZE		10000000					/*   Size of 3-grams array		TEST					*/
-#define NGRAMS4_ARRAY_SIZE		10000000					/*   Size of 4-grams array		TEST					*/
-#define NGRAMS5_ARRAY_SIZE		10000000					/*   Size of 5-grams array		TEST					*/
-#define NGRAMS6_ARRAY_SIZE		10000000					/*   Size of 6-grams array		TEST					*/
+#define NGRAMS_ARRAY_SIZE		20000000				/*   Size of the whole ngrams array	TEST					*/
+#define NGRAMS1_ARRAY_SIZE		10000000				/*   Size of 1-grams array		TEST					*/
+#define NGRAMS2_ARRAY_SIZE		10000000				/*   Size of 2-grams array		TEST					*/
+#define NGRAMS3_ARRAY_SIZE		10000000				/*   Size of 3-grams array		TEST					*/
+#define NGRAMS4_ARRAY_SIZE		10000000				/*   Size of 4-grams array		TEST					*/
+#define NGRAMS5_ARRAY_SIZE		10000000				/*   Size of 5-grams array		TEST					*/
+#define NGRAMS6_ARRAY_SIZE		10000000				/*   Size of 6-grams array		TEST					*/
 #else
 // WITH_PUNCT:
 //#define NGRAMS_ARRAY_SIZE		829273910				/*   Size of the whole ngrams array						*/
-////#define NGRAMS_ARRAY_SIZE		8292739					/*   Size of the whole ngrams array						*/
 //#define NGRAMS1_ARRAY_SIZE		5704397					/*   Size of 1-grams array							*/
 //#define NGRAMS2_ARRAY_SIZE		73260916				/*   Size of 2-grams array							*/
 //#define NGRAMS3_ARRAY_SIZE		164210291				/*   Size of 3-grams array							*/
@@ -101,7 +84,7 @@
 //#define NGRAMS5_ARRAY_SIZE		199620256				/*   Size of 5-grams array							*/
 //#define NGRAMS6_ARRAY_SIZE		185628604				/*   Size of 6-grams array							*/
 // WO_PUNCT:
-#define NGRAMS_ARRAY_SIZE		519870292				/*   Size of the whole ngrams array						*/
+#define NGRAMS_ARRAY_SIZE		519870292				/*   Size of the ngrams array without punctuation				*/
 #define NGRAMS1_ARRAY_SIZE		6605612					/*   Size of 1-grams array							*/
 #define NGRAMS2_ARRAY_SIZE		73391850				/*   Size of 2-grams array							*/
 #define NGRAMS3_ARRAY_SIZE		131134941				/*   Size of 3-grams array							*/
@@ -109,13 +92,6 @@
 #define NGRAMS5_ARRAY_SIZE		102765885				/*   Size of 5-grams array							*/
 #define NGRAMS6_ARRAY_SIZE		79341627				/*   Size of 6-grams array							*/
 #endif
-
-
-
-
-
-
-
 
 #define NGRAMS_COLUMNS			3					/*   Number of columns for 2-6-grams arrays (-1 for 1-grams table)	TEST	*/
 #define FOUND_NGRAMS_LIMIT_DEFAULT	100					/*   Amount of found sentences to collect					*/
@@ -131,40 +107,6 @@ int cl, rc;
 
 // Semaphore
 static sem_t count_sem;
-
-
-
-
-
-
-
-
-
-// int SOURCES_ARRAY_SIZE;					/*   Size of sources arrays							*/
-// int TAGS_ARRAY_SIZE;					/*   Size of tags combinations array						*/
-// int TAGS_UNIQ_ARRAY_SIZE;				/*   Amount of uniq tags	 						*/
-// int WORDS_ARRAY_SIZE;					/*   Size of words array							*/
-// int WORDS_CASE_ARRAY_SIZE;				/*   Size of words (case sensitive)						*/
-// int LEMMAS_ARRAY_SIZE;					/*   Size of lemmas array							*/
-// int UNITED_ARRAY_SIZE;					/*   Size of united array							*/
-// 
-// int AMOUNT_SENTENCES;					/*   Amount of sentences	TEST						*/
-// int SIZE_ARRAY_MAIN;
-// 
-// int NGRAMS_ARRAY_SIZE;					/*   Size of the whole ngrams array	TEST					*/
-// int NGRAMS1_ARRAY_SIZE;					/*   Size of 1-grams array		TEST					*/
-// int NGRAMS2_ARRAY_SIZE;					/*   Size of 2-grams array		TEST					*/
-// int NGRAMS3_ARRAY_SIZE;					/*   Size of 3-grams array		TEST					*/
-// int NGRAMS4_ARRAY_SIZE;					/*   Size of 4-grams array		TEST					*/
-// int NGRAMS5_ARRAY_SIZE;					/*   Size of 5-grams array		TEST					*/
-// int NGRAMS6_ARRAY_SIZE;					/*   Size of 6-grams array		TEST					*/
-
-
-
-
-
-
-
 
 // main array for fastmorph
 int *array_united;
@@ -190,8 +132,6 @@ int size_list_lemmas;
 char *list_tags;							/*   Long string for tags   */
 int size_list_tags;
 
-//char array_tags_uniq[TAGS_UNIQ_ARRAY_SIZE][WORDS_BUFFER_SIZE];	/*   Array of uniq tags   */
-//int size_array_tags_uniq;
 char *list_tags_uniq;							/*   Array of uniq tags   */
 int size_list_tags_uniq;
 
@@ -228,7 +168,7 @@ int size_list_sources_meta;
 char *list_sources_full;						/*   Long string for sources full   */
 int size_list_sources_full;
 
-//char source_types[SOURCES_ARRAY_SIZE][SOURCE_TYPES_BUFFER_SIZE];	/*   source types: book, www...com   */
+//char source_types[SOURCES_ARRAY_SIZE][SOURCE_TYPES_BUFFER_SIZE];	/*   source types: book, www...com TODO: filter by type, genre...   */
 
 char source[SOURCE_BUFFER_SIZE];					/*   search string for sources: (*еш*) -> еш (кеше, ешрак, теш)   */
 
@@ -340,8 +280,6 @@ void * func_run_united(struct thread_data_united *);
 int prompt(void);
 void * func_run_socket(char *);
 int func_sort_tags(char *);
-//void time_start(struct timeval *, struct timezone *);
-//long time_stop(struct timeval *, struct timezone *);
 void func_realloc(void);
 void func_malloc(void);
 

@@ -25,4 +25,3 @@ long time_stop(struct timeval *tv)
 	}
 	return (dtv.tv_sec * 1000) + (dtv.tv_usec / 1000);
 }
-

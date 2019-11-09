@@ -1,3 +1,7 @@
+/*
+ * Strings comparison functions are placed here
+ */
+
 
 /*
  * Comparison function for strings: char sort[TAGS_UNIQ_ARRAY_SIZE][TAGS_UNIQ_BUFFER_SIZE];
@@ -69,8 +73,8 @@ int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, cha
 /*
  * RegEx normalization \\ -> \ because JSON needs double backslash
  */
-int func_regex_normalization(const char match[WORDS_BUFFER_SIZE])
-{
+//int func_regex_normalization(const char match[WORDS_BUFFER_SIZE])
+//{
 /*
 	char pattern[WORDS_BUFFER_SIZE];
 	for(int x = 0; x < WORDS_BUFFER_SIZE; x++) {
@@ -84,8 +88,8 @@ int func_regex_normalization(const char match[WORDS_BUFFER_SIZE])
 	}
 	printf("\nRegEx: %s -> %s", match, pattern);
 */
-	return 0;
-}
+//	return 0;
+//}
 
 
 /*
@@ -110,7 +114,7 @@ int func_regex_sources(const char pattern[SOURCE_BUFFER_SIZE])
 		return 1;
 	}
 	for(unsigned long long i = 0; i < SOURCES_ARRAY_SIZE; i++) {
-		//if(!regexec(&start_state, ptr_sources[i], 0, NULL, 0)) {
+		//if(!regexec(&start_state, ptr_sources[i], 0, NULL, 0)) { // TODO: add filter by separate sources or genres?
 		if(!regexec(&start_state, ptr_sources_author[i], 0, NULL, 0)) {
 			source_mask[i] += (unsigned int)1 << (type);
 			if(DEBUG)
@@ -193,7 +197,6 @@ setMask:
 /*
  * Advanced pattern matching (*?) search for sources
  */
-//int func_szWildMatchSource(const char match[SOURCE_BUFFER_SIZE], const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type, struct thread_data_united *thdata_united)
 int func_szWildMatchSource(const char match[SOURCE_BUFFER_SIZE])
 {
 	char a;
@@ -201,13 +204,6 @@ int func_szWildMatchSource(const char match[SOURCE_BUFFER_SIZE])
 	register const char *str, *pat, *s, *p;
 
 	const int type = 0; // Offset for full source. TODO: 1 - Author(s), 2 - Title, 3 - ...
-
-	/*
-	if(strcmp(match, "") == 0) {
-		strncpy(bufout, "{\"id\":-1}", SOCKET_BUFFER_SIZE - 1);
-		bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
-	}
-	*/
 
 	//for(unsigned long long i = united_begin; i < united_end; i++) {
 	for(unsigned long long i = 0; i < SOURCES_ARRAY_SIZE; i++) {
@@ -253,7 +249,6 @@ starCheck:
 		str++;
 		goto loopStart;
 setMask:
-		//united_mask[i] += (unsigned long long)1 << (SEARCH_TYPES_OFFSET * mask_offset + type);
 		source_mask[i] += (unsigned int)1 << (type);
 		//if(DEBUG)
 		//	printf("\nfunc_szWildMatchSource: %s -> %s", match, ptr_sources[i]);
@@ -289,11 +284,6 @@ int func_fill_search_mask()
 	morph_types = 0;
 
 	// Calculate amount of params (words) to search
-	/*
-	while(params < AMOUNT_TOKENS && (word[params][0] || lemma[params][0] || tags[params][0] || wildmatch[params][0] || wildmatch_lemma[params][0])) {
-		++params;
-	}
-	*/
 	for(int i = AMOUNT_TOKENS - 1; i >= 0; i--) {
 		if(word[i][0] || lemma[i][0] || tags[i][0] || wildmatch[i][0] || wildmatch_lemma[i][0]) {
 			params = i + 1;

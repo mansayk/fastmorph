@@ -13,4 +13,3 @@ long time_stop(struct timeval *);
 #endif
 
 #endif /* _POINT_OF_TIME_H_ */
-

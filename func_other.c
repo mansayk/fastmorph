@@ -1,32 +1,11 @@
-
-
-
+/*
+ * Some other functions
+ */
 
 
 /*
  * Finding search distances for each thread united
  */
-/*
-int func_find_distances_for_threads_united()
-{
-	printf("\n\nSearch distances for each thread united:");
-	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
-
-	for(int x = 0; x < SEARCH_THREADS; x++) {
-		thread_data_array_united[x].finish = x * min_part + min_part - 1;
-		if(x == 0) {
-			thread_data_array_united[x].start = 0;
-		} else {
-			thread_data_array_united[x].start = (thread_data_array_united[x-1].finish + 1);
-		}
-		if(x == SEARCH_THREADS - 1) {
-			thread_data_array_united[x].finish = UNITED_ARRAY_SIZE - 1;
-		}
-		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
-	}
-	return 0;
-}
-*/
 int func_find_distances_for_threads_united()
 {
 	printf("\n\nSearch distances for each thread united:");
@@ -42,16 +21,11 @@ int func_find_distances_for_threads_united()
 		}
 		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
 	}
+
 	// last
 	thread_data_array_united[SEARCH_THREADS - 1].finish = UNITED_ARRAY_SIZE - 1;
 	return 0;
 }
-
-
-
-
-
-
 
 
 /*
@@ -64,9 +38,6 @@ void * func_run_united(struct thread_data_united *thdata_united)
 		pthread_mutex_lock(&mutex_united);
 		pthread_cond_wait(&cond_united, &mutex_united);
 		pthread_mutex_unlock(&mutex_united);
-
-		//printf("|RUN_UNITED %d", thdata_united->id);
-		//fflush(stdout);
 
 		// Find ids and set masks for all search words, lemmas, tags and patterns
 		for(unsigned int x = 0; x < params; x++) {
@@ -157,6 +128,7 @@ void * func_run_socket(char *socket_path)
 		perror("Bind error");
 		exit(-1);
 	}
+
 	// Giving permissions to all processes to access the socket file
 	chmod(socket_path, 0666);
 
@@ -164,6 +136,7 @@ void * func_run_socket(char *socket_path)
 		perror("Listen error");
 		exit(-1);
 	}
+
 	// Creating threads for the big cycle
 	printf("\n\nCreating threads...");
 	for(t = 0; t < SEARCH_THREADS; t++) {
@@ -177,6 +150,7 @@ void * func_run_socket(char *socket_path)
 			exit(-1);
 		}
 	}
+
 	// Creating threads for the united cycle
 	printf("\n\nCreating threads united...");
 	for(t = 0; t < SEARCH_THREADS; t++) {
@@ -190,6 +164,7 @@ void * func_run_socket(char *socket_path)
 			exit(-1);
 		}
 	}
+
 	while(1) {
 		if((cl = accept(fd, NULL, NULL)) == -1) {
 			perror("Accept error");
@@ -206,6 +181,7 @@ void * func_run_socket(char *socket_path)
 			close(cl);
 		}
 	}
+
 	// wait for our thread to finish before continuing
 	for(t = 0; t < SEARCH_THREADS; t++){
 		rc_thread[t] = pthread_join(threads[t], NULL);
@@ -215,6 +191,7 @@ void * func_run_socket(char *socket_path)
 		}
 		printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
 	}
+
 	// wait for our thread united to finish before continuing
 	for(t = 0; t < SEARCH_THREADS; t++){
 		rc_thread_united[t] = pthread_join(threads_united[t], NULL);

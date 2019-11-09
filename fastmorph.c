@@ -1,6 +1,6 @@
 /*
  * fastmorph.c - Fast corpus search engine.
- * Version v5.8.0 - 2018.12.13
+ * Version v5.9.0 - 2019.11.09
  *
  * "fastmorph" is a high speed search engine for text corpora:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -8,8 +8,7 @@
  *   - has multithreading support.
  *
  * Copyright (C) 2014-present Mansur Saykhunov <tatcorpus@gmail.com>
- * Acknowledgements:
- *   I am so grateful to Rustem Khusainov for his invaluable help during all this work!
+ *                            Rustem Khusainov <tatcorpus@gmail.com>
  */
 
 #define _GNU_SOURCE		/*   strndup		   */
@@ -24,7 +23,6 @@
 #include <sys/socket.h>		/*   socket		   */
 #include <sys/un.h>		/*   socket		   */
 #include <unistd.h>		/*   write		   */
-//#include <sys/time.h>		/*   gettimeofday	   */
 #include <mysql/mysql.h>	/*   MySQL and MariaDB	   */
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
 #include <locale.h>		/*   for regcomp, regexec  */
@@ -45,7 +43,6 @@
  *
  **************************************************************************************/
 
-//#include "func_time.c"		/*    */
 #include "func_jsmn.c"		/*    */
 #include "func_crypt.c"		/*    */
 #include "func_mysql.c"		/*    */
@@ -53,12 +50,9 @@
 #include "func_sort.c"		/*    */
 #include "func_other.c"		/*    */
 #include "func_malloc.c"	/*    */
-#include "func_resize.c"	/*    */
-
 
 
 log4c_category_t * logcat=NULL;   /* will be required for all log calls */
-
 
 
 /*
@@ -145,8 +139,6 @@ int func_read_mysql()
 					ptr[SOURCE_BUFFER_SIZE - 1] = '\0';
 					//printf("\nk: %s", ptr);
 					ptr += strlen(text) + 1;
-					//strncpy(source_types[i], row[1], SOURCE_TYPES_BUFFER_SIZE - 1);
-					//source_types[i][SOURCE_TYPES_BUFFER_SIZE - 1] = '\0';
 					++i;
 					// nice
 					decrypt(row[0], text, sizeof(text));
@@ -240,8 +232,6 @@ int func_read_mysql()
 		int source_curnt = 0;
 		int n_mysql_load_limit = 0;
 
-		//int iii = 0;
-
 		for(int t = 0; t < SIZE_ARRAY_MAIN - SOURCES_ARRAY_SIZE - AMOUNT_SENTENCES; t = t + MYSQL_LOAD_LIMIT) {
 			if(SIZE_ARRAY_MAIN - SOURCES_ARRAY_SIZE - AMOUNT_SENTENCES - t < MYSQL_LOAD_LIMIT) {
 				n_mysql_load_limit = SIZE_ARRAY_MAIN - SOURCES_ARRAY_SIZE - AMOUNT_SENTENCES - t;
@@ -274,13 +264,6 @@ int func_read_mysql()
 
 						if(i == 0 || source_last != source_curnt) {
 							array_united[i] = SOURCE_OFFSET - source_curnt;
-
-
-
-							//if(source_curnt > 6920 && sent_curnt == 3999999)	
-							//	printf("\nID: %lld UNITED: %d SENT: %d SOURCE: %d", i, array_united[i], sent_curnt, source_curnt);
-
-
 							++i;
 							source_last = source_curnt;
 							sent_last = -1;
@@ -296,25 +279,14 @@ int func_read_mysql()
 							errno = 0;
 							array_united[i] = -sent_curnt; // unary "-"
 							++i;
-							//array_united[i] = (int) -(strtol(row[0], &endptr, 10)); // unary "-"
 							array_united[i] = (int) strtol(row[0], &endptr, 10); // unary "-"
 							if(errno == ERANGE)
 								perror("\nstrtol");
 							if(row[0] == endptr)
 								fprintf(stderr, "\nNo digits were found");
-
-
-
-							//if(source_curnt > 6920 && sent_curnt == 3999999)	
-							//	printf("\nID: %lld UNITED: %d SENT: %d SENTi: %d SOURCE: %d", i, array_united[i], sent_curnt, iii, source_curnt);
-							//iii++;
-
-
 							sentence_source[m++] = (int) strtol(row[2], &endptr, 10); // source id
 							sent_last = sent_curnt;
 						}
-
-
 						++i;
 					}
 					p += mysql_num_rows(myresult);
@@ -340,85 +312,6 @@ int func_read_mysql()
 /*
  * Finding search distances for each thread
  */
-/*
-int func_find_distances_for_threads()
-{
-	printf("\n\nSearch distances for each thread:");
-	unsigned int x, y;
-	unsigned int sentence = 0;
-	unsigned long long min_part = SIZE_ARRAY_MAIN / SEARCH_THREADS;
-	for(x = 0; x < SEARCH_THREADS; x++) {
-		// distances
-		thread_data_array[x].finish = x * min_part + min_part - 1;
-		if(x == 0) {
-			thread_data_array[x].start = 0;
-		} else {
-			thread_data_array[x].start = thread_data_array[x-1].finish + 1;
-		}
-		if(x == SEARCH_THREADS - 1) {
-			thread_data_array[x].finish = SIZE_ARRAY_MAIN - 1;
-		} else {
-			while(array_united[thread_data_array[x].finish] > SOURCE_OFFSET) {
-				++thread_data_array[x].finish;
-			}
-			--thread_data_array[x].finish;
-		}
-		// sentences
-		thread_data_array[x].first_sentence = sentence;
-		y = thread_data_array[x].start;
-		while(y <= thread_data_array[x].finish) {
-			if(array_united[y] > SOURCE_OFFSET && array_united[y] < 0) {
-				++sentence;
-			}
-			++y;
-		}
-		printf("\n  Thread #%d part:%llu start:%llu finish:%llu first_sentence:%u first_element:%d", x, min_part, thread_data_array[x].start, thread_data_array[x].finish, thread_data_array[x].first_sentence, array_united[thread_data_array[x].start]);
-	}
-	return 0;
-}
-*/
-/*
-int func_find_distances_for_threads()
-{
-	printf("\n\nSearch distances for each thread:");
-	unsigned int x, y;
-	unsigned int sentence = 0;
-	unsigned long long min_part = SIZE_ARRAY_MAIN / SEARCH_THREADS;
-	for(x = 0; x < SEARCH_THREADS; x++) {
-		// distances
-		thread_data_array[x].finish = x * min_part + min_part - 1;
-		if(x == 0) {
-			thread_data_array[x].start = 0;
-		} else {
-			//thread_data_array[x].start = thread_data_array[x-1].finish + 1;
-			thread_data_array[x].start = thread_data_array[x-1].finish + 1; /////////////////////////////////////////////////////////////
-		}
-		if(x == SEARCH_THREADS - 1) {
-			thread_data_array[x].finish = SIZE_ARRAY_MAIN - 1;
-		} else {
-			while(array_united[thread_data_array[x].finish] > SOURCE_OFFSET) {
-				++thread_data_array[x].finish;
-			}
-			//--thread_data_array[x].finish;
-		}
-		// sentences
-		thread_data_array[x].first_sentence = sentence;
-		y = thread_data_array[x].start;
-		//while(y <= thread_data_array[x].finish) {
-		while(y < thread_data_array[x].finish) {
-			if(array_united[y] > SOURCE_OFFSET && array_united[y] < 0) {
-				++sentence;
-			}
-			++y;
-		}
-
-		//--sentence; ///////////////////////////////////////////////////////////
-
-		printf("\n  Thread #%d part:%llu start:%llu finish:%llu first_sentence:%u first_element:%d last_element:%d", x, min_part, thread_data_array[x].start, thread_data_array[x].finish, thread_data_array[x].first_sentence, array_united[thread_data_array[x].start], array_united[thread_data_array[x].finish]);
-	}
-	return 0;
-}
-*/
 int func_find_distances_for_threads()
 {
 	printf("\n\nSearch distances for each thread:");
@@ -456,56 +349,8 @@ int func_find_distances_for_threads()
 			thread_data_array[SEARCH_THREADS - 1].finish = SIZE_ARRAY_MAIN - 1;
 		printf("\n  Thread #%d part:%llu start:%llu finish:%llu first_sentence:%u first_element:%d last_element:%d", x, min_part, thread_data_array[x].start, thread_data_array[x].finish, thread_data_array[x].first_sentence, array_united[thread_data_array[x].start], array_united[thread_data_array[x].finish]);
 	}
-	/*
-	thread_data_array[0].first_sentence = thread_data_array[0].first_sentence;
-	*/
 	return 0;
 }
-
-
-/*
- * Finding search distances for each thread united
- */
-/*
-int func_find_distances_for_threads_united()
-{
-	printf("\n\nSearch distances for each thread united:");
-	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
-
-	for(int x = 0; x < SEARCH_THREADS; x++) {
-		thread_data_array_united[x].finish = x * min_part + min_part - 1;
-		if(x == 0) {
-			thread_data_array_united[x].start = 0;
-		} else {
-			thread_data_array_united[x].start = (thread_data_array_united[x-1].finish + 1);
-		}
-		if(x == SEARCH_THREADS - 1) {
-			thread_data_array_united[x].finish = UNITED_ARRAY_SIZE - 1;
-		}
-		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
-	}
-	return 0;
-}
-*/
-/*int func_find_distances_for_threads_united()
-{
-	printf("\n\nSearch distances for each thread united:");
-	unsigned long long min_part = UNITED_ARRAY_SIZE / SEARCH_THREADS;
-	
-	// first
-	thread_data_array_united[0].start = 0;
-
-	for(int x = 0; x < SEARCH_THREADS; x++) {
-		thread_data_array_united[x].finish = x * min_part + min_part - 1;
-		if(x != 0) {
-			thread_data_array_united[x].start = (thread_data_array_united[x-1].finish + 1);
-		}
-		printf("\n  Thread united #%d part:%llu start:%llu finish:%llu", x, min_part, thread_data_array_united[x].start, thread_data_array_united[x].finish);
-	}
-	// last
-	thread_data_array_united[SEARCH_THREADS - 1].finish = UNITED_ARRAY_SIZE - 1;
-	return 0;
-}*/
 
 
 /*
@@ -518,7 +363,6 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 	int lspace = 1;
 	int rspace = 1;
 	int quote_open = 0;
-	//char bufout[SOCKET_BUFFER_SIZE];
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
 
@@ -527,35 +371,7 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 	snprintf(temp, 100, "%d", curnt_sent);
 	strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
-	/*
-	strncat(bufout, ",\"source\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	strncpy(temp, ptr_sources[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
-	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
-	x = strlen(bufout);
-	y = 0;
-	while(temp[y]) {
-		if(temp[y] == '"') {
-			bufout[x] = '\\';
-			bufout[++x] = '"';
-		} else {
-			bufout[x] = temp[y];
-		}
-		++y;
-		++x;
-	}
-	bufout[x] = '"';
-	bufout[++x] = ',';
-	bufout[++x] = '\0';
-	*/
-
-
-
-
-
-
-
 	strncat(bufout, ",\"nice\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_nice[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_nice[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -571,14 +387,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
-
-
-
 	strncat(bufout, ",\"author\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_author[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_author[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -594,17 +405,14 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
 	strncat(bufout, ",\"title_id\":", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	bufout[SOCKET_BUFFER_SIZE - 1] = '\0';
-	//snprintf(temp, 100, "%d", sentence_source[curnt_sent]);
 	snprintf(temp, 100, "%d", curnt_source);
 	strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 
 	strncat(bufout, ",\"title\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_title[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_title[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -620,11 +428,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
 	strncat(bufout, ",\"date\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_date[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_date[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -640,12 +446,7 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
-
-
-
-
 
 	strncat(bufout, ",\"type\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	strncpy(temp, ptr_sources_type[curnt_source], SOCKET_BUFFER_SIZE - 1);
@@ -663,19 +464,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
-
-
-
-
-
-
-
-
 	strncat(bufout, ",\"genre\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_genre[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_genre[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -691,20 +482,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
-
-
-
-
-
-
-
-
-
 	strncat(bufout, ",\"source\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_source[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_source[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -720,13 +500,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
-
-
 	strncat(bufout, ",\"url\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_url[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_url[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -742,13 +518,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
-
-
 	strncat(bufout, ",\"meta\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_meta[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_meta[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -764,13 +536,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 
-
-
 	strncat(bufout, ",\"full\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncpy(temp, ptr_sources_full[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - 1);
 	strncpy(temp, ptr_sources_full[curnt_source], SOCKET_BUFFER_SIZE - 1);
 	temp[SOCKET_BUFFER_SIZE - 1] = '\0';
 	x = strlen(bufout);
@@ -786,21 +554,9 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		++x;
 	}
 	bufout[x] = '"';
-	//bufout[++x] = ',';
 	bufout[++x] = '\0';
 	
-	//strncat(bufout, "\"source_type\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncat(bufout, source_types[sentence_source[curnt_sent]], SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-	//strncat(bufout, "\",", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-
-	//printf("::1:: %s", bufout);
-	//fflush(stdout);
-	
 	strncat(bufout, ",\"sentence\":\"", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
-
-	//printf("::2:: %s", bufout);
-	//printf("::2len:: %d", strlen(bufout));
-	//fflush(stdout);
 
 	y = 0;
 	do {
@@ -849,17 +605,6 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 		if(lspace)
 			strncat(bufout, " ", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	
-		//printf("\n::2:: %s", bufout);
-		//printf("\n::2len:: %ld", strlen(bufout));
-		//fflush(stdout);
-
-		//printf("\nsent_begin: %lld", sent_begin);
-		//fflush(stdout);
-		//printf("\nunited: %ld", array_united[sent_begin]);
-		//fflush(stdout);
-		//printf("\nulemma: %s", united_lemmas[array_united[sent_begin]]);
-		//fflush(stdout);
-
 		// html tag open
 		if(z[y] == sent_begin) {
 			// found: lemma + tags
@@ -867,7 +612,6 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 				snprintf(temp, SOCKET_BUFFER_SIZE, FOUND_HTML_OPEN, y, "\\", united_lemmas[abs(array_united[z[y]])], united_tags[abs(array_united[z[y]])]);
 			else
 				snprintf(temp, SOCKET_BUFFER_SIZE, FOUND_HTML_OPEN, y, "", united_lemmas[abs(array_united[z[y]])], united_tags[abs(array_united[z[y]])]);
-			//y++;
 		} else {
 			// regular: lemma + tags
 			if(united_lemmas[abs(array_united[sent_begin])][0] == '"') // if lemma is '"'
@@ -886,7 +630,6 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 
 		// html tag close
 		if(z[y] == sent_begin) {
-			//strncat(bufout, HTML_CLOSE, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 			snprintf(temp, SOCKET_BUFFER_SIZE, FOUND_HTML_CLOSE, y);
 			strncat(bufout, temp, SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 			y++;
@@ -898,10 +641,6 @@ int func_build_sents(unsigned int end, unsigned int curnt_source, unsigned int c
 			lspace = rspace;
 		else
 			lspace = 1;
-
-		//printf("\n::4:: %s", bufout);
-		//printf("\n::4len:: %d", strlen(bufout));
-		//fflush(stdout);
 
 	} while(array_united[++sent_begin] >= 0 && sent_begin < end);
 
@@ -971,7 +710,6 @@ void * func_run_cycle(struct thread_data *thdata)
 	unsigned long long x6;
 
 	register int valid_source;
-	//register int negative;
 	unsigned int progress;
 	unsigned int found_all;
 	unsigned long long sent_begin = 0;
@@ -984,9 +722,6 @@ void * func_run_cycle(struct thread_data *thdata)
 		pthread_mutex_lock(&mutex);
 		pthread_cond_wait(&cond, &mutex);
 		pthread_mutex_unlock(&mutex);
-
-		//printf("|RUN_CYCLE %d", thdata->id);
-		//fflush(stdout);
 
 		// search types for every token
 		search_types = morph_types;
@@ -1017,7 +752,6 @@ void * func_run_cycle(struct thread_data *thdata)
 		valid_source = 0;
 		z1 = main_begin;
 		last_pos = thdata->last_pos;
-		//curnt_sent = first_sentence;
 
 		if(DEBUG)
 			printf("\nz1=%lld, last_pos=%lld, curnt_sent=%d, sent_begin=%lld, found_limit=%d, thread=%d", z1, last_pos, curnt_sent, sent_begin, found_limit, thdata->id);
@@ -1026,43 +760,22 @@ void * func_run_cycle(struct thread_data *thdata)
 		while(z1 <= main_end) {
 			// Check if a new text and/or sentence beginning
 			if(array_united[z1] < 0) {
-				//negative = array_united[z1];
-				// Calculate sentence id
-				//if(z1) 
-				//	++curnt_sent;
 				// source_mask to check if this text(s) is selected (subcorpora)
 				if(array_united[z1] <= SOURCE_OFFSET) {
 					curnt_source = SOURCE_OFFSET - array_united[z1];
-					//printf("\nCURNT_SOURCE: %d SENT: %d", curnt_source, curnt_sent);
-					//fflush(stdout);
-					//z1++;
-					//z1++;
-					//continue;
-					//printf("\nsources_test: %d == %d", source_mask[SOURCE_OFFSET - negative], search_types_source);
-					//if(source_mask[SOURCE_OFFSET - negative] == search_types_source)
 					if(source_mask[curnt_source] == search_types_source)
 						valid_source = 1;
 					else
 						valid_source = 0;
-					//negative = -array_united[++z1];
-					//negative = -array_united[++z1];
-					//sent_begin = z1 + 1;
 					++z1;
 				}
-				//else {
-				//negative = -negative;
 				curnt_sent = -array_united[z1];
 				sent_begin = ++z1;
-				//++z1;
-				//}
-//				continue;
 			}
 			if(valid_source) {
 				if((united_mask[array_united[z1]] & 0xFF) == (search_types & 0xFF)) {
 					// param2
 					if(params > 1) {
-						//z2 = z1 + dist1_start;
-						//x2 = z1 + dist1_end;
 						z2 = z1 + dist1_start;
 						x2 = z1 + dist1_end;
 						/*
@@ -1164,9 +877,6 @@ void * func_run_cycle(struct thread_data *thdata)
 												if((z1 > last_pos || !last_pos) && found_limit) {
 													sem_wait(&count_sem);
 													if(found_limit) {
-														//printf("\nBB: %lld, %lld, %lld, %d", z1, z2, z3, curnt_sent);
-														//printf("\nCURNT_SOURCE: %d", curnt_source);
-														//fflush(stdout);
 														--found_limit;
 														sem_post(&count_sem);
 														func_build_sents(main_end, curnt_source, curnt_sent, sent_begin, z1, z2, z3, 0, 0, 0);
@@ -1236,7 +946,6 @@ void * func_run_cycle(struct thread_data *thdata)
 		//pthread_cond_broadcast(&cond2);
 		pthread_cond_signal(&cond2);
 		pthread_mutex_unlock(&mutex2);
-
 		//pthread_exit(NULL);
 	} // while(1)
 }
@@ -1279,7 +988,6 @@ int func_extend_context(unsigned int extend_sent)
 				else
 					break;
 			}
-			//++curnt_sent;
 		}
 		++z1;
 	}
@@ -1367,14 +1075,10 @@ int func_validate_distances()
 void func_on_socket_event(char *bufin)
 {
 	struct timeval tv1, tv2, tv3, tv4; // different counters
-	//	struct timezone tz;
 	unsigned int t;
-	//char bufin[SOCKET_BUFFER_SIZE];
 	char bufout[SOCKET_BUFFER_SIZE];
 	unsigned int progress; // The position of last returned sentence in 'found_all'
 	char temp[SOCKET_BUFFER_SIZE];
-
-	
 	
 	// Initial search time value
 	time_start(&tv1);
@@ -1453,11 +1157,13 @@ void func_on_socket_event(char *bufin)
 		}
 
 		time_start(&tv3);
+
 		// broadcast to workers to work
 		pthread_mutex_lock(&mutex_united);
 		finished_united = SEARCH_THREADS;
 		pthread_cond_broadcast(&cond_united);
 		pthread_mutex_unlock(&mutex_united);
+
 		// wait for workers to finish
 		pthread_mutex_lock(&mutex2_united);
 		while(finished_united)
@@ -1478,11 +1184,13 @@ void func_on_socket_event(char *bufin)
 		}
 
 		time_start(&tv4);
+
 		// broadcast to workers to work
 		pthread_mutex_lock(&mutex);
 		finished = SEARCH_THREADS;
 		pthread_cond_broadcast(&cond);
 		pthread_mutex_unlock(&mutex);
+
 		// wait for workers to finish
 		pthread_mutex_lock(&mutex2);
 		while(finished)
@@ -1537,17 +1245,7 @@ void func_on_socket_event(char *bufin)
 		}
 	}
 	printf("\nQuery processing time: %ld milliseconds.\n", time_stop(&tv1));
-	
-	
-	
-	
-	
-			
-
 }
-
-
-
 
 
 /*
@@ -1555,14 +1253,14 @@ void func_on_socket_event(char *bufin)
  */
 int main()
 {
-  int rc;
-  /* initalizing log output */
-  if(rc=log4c_init()){
-    printf("log4c_init() failed\n");
-    return rc;
-  }
-  logcat=log4c_category_get("fastmorph");
+	int rc;
 
+	// Initalizing log output
+	if(rc = log4c_init()) {
+		printf("log4c_init() failed\n");
+		return rc;
+	}
+	logcat = log4c_category_get("fastmorph");
   
 	// set locale for regex functions
 	setlocale(LC_ALL, "ru_RU.UTF-8");
@@ -1572,62 +1270,27 @@ int main()
 
 	// main big array
 	array_united = malloc(sizeof(*array_united) * SIZE_ARRAY_MAIN);
-
-	
-	
-	
-	
-	
-	
-	
-
-	
-	
 	
 	func_malloc();
-	
-	
 	func_read_mysql_common();
 	func_read_mysql();
 	func_find_distances_for_threads();
 	func_find_distances_for_threads_united();
-
 	func_realloc();
-	
-	
-	
-	
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	sem_init(&count_sem, 0, 1);
 
 	// run func_run_socket() in a thread
 	//printf("\n\nCreating socket listening thread...");
-	log4c_category_log(logcat,LOG4C_PRIORITY_INFO,"Creating socket listening thread...");
+	log4c_category_log(logcat, LOG4C_PRIORITY_INFO, "Creating socket listening thread...");
 	pthread_t thread; // thread identifier
 	pthread_attr_t attr; // thread attributes
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED); // run in detached mode
 	int rc_thread = pthread_create(&thread, &attr, (void *) &func_run_socket, FASTMORPH_UNIX_DOMAIN_SOCKET);
-	if(rc_thread){
-	  log4c_category_log(logcat,LOG4C_PRIORITY_ERROR,"ERROR: return code from pthread_create() is %d", rc_thread);
-	  return -1;
+	if(rc_thread) {
+		log4c_category_log(logcat,LOG4C_PRIORITY_ERROR,"ERROR: return code from pthread_create() is %d", rc_thread);
+		return -1;
 	}
 
 	// Show 'exit' message in a couple of seconds
@@ -1642,6 +1305,6 @@ int main()
 	free(list_tags);
 	
 	if(log4c_fini())
-	  printf("log4c_fini() failed");
+		printf("log4c_fini() failed");
 	return 0;
 }

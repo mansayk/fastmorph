@@ -1,3 +1,7 @@
+/*
+ * Sorting functions
+ */
+
 
 /*
  * Sort tags in the string

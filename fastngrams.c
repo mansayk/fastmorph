@@ -1,6 +1,6 @@
 /*
  * fastngrams.c - Fast search engine for n-grams.
- * Version v5.8.0 - 2018.12.13
+ * Version v5.9.0 - 2018.11.09
  *
  * "fastngrams" is a high speed search engine for n-grams:
  *   - loads all preprocessed data from MySQL (MariaDB) into RAM;
@@ -8,8 +8,7 @@
  *   - has multithreading support.
  *
  * Copyright (C) 2017-present Mansur Saykhunov <tatcorpus@gmail.com>
- * Acknowledgements:
- *   I am so grateful to Rustem Khusainov for his invaluable help during all this work!
+ *                            Rustem Khusainov <tatcorpus@gmail.com>
  */
 
 #define _GNU_SOURCE		/*   strndup		   */
@@ -24,7 +23,6 @@
 #include <sys/socket.h>		/*   socket		   */
 #include <sys/un.h>		/*   socket		   */
 #include <unistd.h>		/*   write		   */
-//#include <sys/time.h>		/*   gettimeofday	   */
 #include <mysql/mysql.h>	/*   MySQL and MariaDB	   */
 #include <limits.h>		/*   LONG_MIN, ULLONG_MAX  */
 #include <locale.h>		/*   for regcomp, regexec  */
@@ -43,7 +41,6 @@
  *
  **************************************************************************************/
 
-//#include "func_time.c"		/*    */
 #include "func_jsmn.c"		/*    */
 #include "func_crypt.c"		/*    */
 #include "func_mysql.c"		/*    */
@@ -51,7 +48,6 @@
 #include "func_sort.c"		/*    */
 #include "func_other.c"		/*    */
 #include "func_malloc.c"	/*    */
-#include "func_resize.c"	/*    */
 
 
 /*
@@ -64,18 +60,10 @@ int func_read_mysql()
 	MYSQL_RES *myresult;
 	MYSQL_ROW row;
 	char *ptr;
-	//char *ptr_author;
-	//char *ptr_title;
-	//char *ptr_date;
-	//char *ptr_genre;
 	char *endptr;
 	char text[SOURCE_BUFFER_SIZE];
 	char mycommand[200];
 	int i;
-	//int iauthor;
-	//int ititle;
-	//int idate;
-	//int igenre;
 	int x;
 
 	int size;
@@ -93,7 +81,6 @@ int func_read_mysql()
 		int united = 0;
 		int freq = 0;
 		int n_mysql_load_limit = 0;
-		//n_mysql_load_limit = 0;
 
 		for(int t = 0; t < NGRAMS_ARRAY_SIZE; t = t + MYSQL_LOAD_LIMIT) {
 			if(NGRAMS_ARRAY_SIZE - t < MYSQL_LOAD_LIMIT) {
@@ -153,7 +140,6 @@ int func_read_mysql()
 							array_ngrams2[0][node] = united;
 							array_ngrams2[1][node] = freq;
 							array_ngrams2[2][node] = parent;
-							//printf(":::%d", united);
 						} else if(level == 3) {
 							array_ngrams3[0][node] = united;
 							array_ngrams3[1][node] = freq;
@@ -202,28 +188,14 @@ int func_find_distances_for_threads()
 
 
 /*
- * Finding search distances for each thread united
- */
-/*int func_find_distances_for_threads_united()
-{
-	return 0;
-}*/
-
-
-/*
  * Build text sentences from array_main
  */
-//int func_build_sents(unsigned int end, unsigned int curnt_sent, unsigned long long sent_begin, unsigned long long z1, unsigned long long z2, unsigned long long z3, unsigned long long z4, unsigned long long z5, unsigned long long z6)
 int func_build_ngrams(unsigned int z)
 {
 	unsigned int t;
 	int freq;
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
-
-
-
-
 
 	// id
 	strncpy(bufout, "{\"id\":", SOCKET_BUFFER_SIZE - 1);
@@ -260,9 +232,7 @@ int func_build_ngrams(unsigned int z)
 	strncat(bufout, ",\"ngram\":[", SOCKET_BUFFER_SIZE - strlen(bufout) - 1);
 	t = z;
 
-
 	// TODO: Add tips tags and lemmas
-
 
 	switch(params) {
 		case 6:
@@ -431,7 +401,6 @@ void * func_run_cycle(struct thread_data *thdata)
 	//const unsigned long long main_begin = thdata->start;
 	//register const unsigned long long main_end = thdata->finish;
 	register unsigned long long main_end = thdata->finish;
-	//const unsigned int first_sentence = thdata->first_sentence;
 
 	//main_begin = 0;
 	main_end = 0;
@@ -569,29 +538,11 @@ void * func_run_cycle(struct thread_data *thdata)
 				}
 				break;
 			case 2:
-				//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d:=:%lld", found_limit, search_types & 0xFF);
 				main_end = NGRAMS2_ARRAY_SIZE;
 				while(z < main_end) {
-					//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:0:%lld:%lld", found_limit, united_mask[array_ngrams1[0][z]], united_mask[array_ngrams2[0][z]]);
-
-					/*
-					if(	(united_mask[array_ngrams1[0][z]] & 0xFF) == (search_types & 0xFF))
-					{
-						printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:1:%lld", found_limit, search_types & 0xFF);
-						printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:2::%lld:%lld", found_limit, (united_mask[array_ngrams2[0][z]] & 0xFF00), search_types & 0xFF00);
-						if(	(united_mask[array_ngrams2[0][z]] & 0xFF00) == (search_types & 0xFF00))
-						{
-							printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d__:3:%lld", found_limit, search_types & 0xFF00);
-						}
-					}
-					*/
-
-
-
 					if(	(united_mask[array_ngrams2[0][z]] & 0xFF00) == (search_types & 0xFF00) &&	(t = array_ngrams2[2][z]) &&
 						(united_mask[array_ngrams1[0][t]] & 0xFF) == (search_types & 0xFF))
 					{
-						//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d", found_limit);
 						if(found_limit) {
 							func_build_ngrams(z);
 							--found_limit;
@@ -606,10 +557,8 @@ void * func_run_cycle(struct thread_data *thdata)
 				while(z < main_end) {
 					if(	(united_mask[array_ngrams1[0][z]] & 0xFF) == (search_types & 0xFF))
 					{
-						//printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>++--__%d:%lld", found_limit, search_types & 0xFF);
 						if(found_limit) {
 							func_build_ngrams(z);
-							//printf("\n->%d", array_ngrams1[0][z]);
 							--found_limit;
 						}
 						++found_all;
@@ -631,126 +580,9 @@ void * func_run_cycle(struct thread_data *thdata)
 		//pthread_cond_broadcast(&cond2);
 		pthread_cond_signal(&cond2);
 		pthread_mutex_unlock(&mutex2);
-
 		//pthread_exit(NULL);
 	} // while(1)
 }
-
-
-/*
- * RegEx
- */
-/*int func_regex(const char pattern[WORDS_BUFFER_SIZE], const int mask_offset, char *united_x[UNITED_ARRAY_SIZE], const int type, struct thread_data_united *thdata_united)
-{
-	// Setting search distances for current (by each) thread
-	const unsigned long long united_begin = thdata_united->start;
-	register const unsigned long long united_end = thdata_united->finish;
-	regex_t start_state;
-
-	//if(regcomp(&start_state, pattern, REG_EXTENDED|REG_ICASE)) { // TODO: Case sensitive
-	if(regcomp(&start_state, pattern, REG_EXTENDED)) {
-		fprintf(stderr, "RegEx: Bad pattern: '%s'\n", pattern); // TODO: return this to the user
-		return 1;
-	}
-	for(unsigned long long i = united_begin; i < united_end; i++) {
-		if(!regexec(&start_state, united_x[i], 0, NULL, 0)) {
-			united_mask[i] += (unsigned long long)1 << (SEARCH_TYPES_OFFSET * mask_offset + type);
-			if(DEBUG)
-				printf("RegEx #%lld: %s (wordform: %s)\n", i, united_x[i], united_words[i]);
-		}
-	}
-	regfree(&start_state);
-	return 0;
-}*/
-
-
-/*
- * Run search united
- */
-/*void * func_run_united(struct thread_data_united *thdata_united)
-{
-	while(1) {
-		// set threads to waiting state
-		pthread_mutex_lock(&mutex_united);
-		pthread_cond_wait(&cond_united, &mutex_united);
-		pthread_mutex_unlock(&mutex_united);
-
-		// Find ids and set masks for all search words, lemmas, tags and patterns
-		for(unsigned int x = 0; x < params; x++) {
-			if(tags[x][0]) {
-				//func_sort_tags(tags[x]);
-				func_szWildMatch(tags[x], x, united_tags, TAGS, thdata_united);
-			}
-			if(wildmatch[x][0]) {
-				if(case_sensitive[x]) {
-					if(regex)
-						func_regex(wildmatch[x], x, united_words_case, WILD, thdata_united);
-					else
-						func_szWildMatch(wildmatch[x], x, united_words_case, WILD, thdata_united);
-				} else {
-					if(regex)
-						func_regex(wildmatch[x], x, united_words, WILD, thdata_united);
-					else
-						func_szWildMatch(wildmatch[x], x, united_words, WILD, thdata_united);
-				}
-			}
-			if(wildmatch_lemma[x][0]) {
-				if(regex)
-					func_regex(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
-				else
-					func_szWildMatch(wildmatch_lemma[x], x, united_lemmas, WILD_LEMMA, thdata_united);
-			}
-		}
-
-		// Decrementing counter and sending signal to func_run_socket()
-		pthread_mutex_lock(&mutex2_united);
-		--finished_united;
-		//pthread_cond_broadcast(&cond2_united);
-		pthread_cond_signal(&cond2_united);
-		pthread_mutex_unlock(&mutex2_united);
-	} // while(1)
-}*/
-
-
-/*
- * Parsing last found positions for every thread
- */
-/*int func_parse_last_pos()
-{
-	if(DEBUG)
-		printf("\nLast positions for threads:");
-	int x = 0;
-	int y = 0;
-	int z = 0;
-	char *endptr;
-	char temp[WORDS_BUFFER_SIZE];
-	for(y = 0; y < SEARCH_THREADS; y++)
-		thread_data_array[y].last_pos = 0;
-	y = 0;
-	do {
-		if(morph_last_pos[y] != 'x' && morph_last_pos[y] != '\0') {
-			temp[x++] = morph_last_pos[y];
-		} else {
-			temp[x] = '\0';
-			errno = 0;
-			thread_data_array[z].last_pos = strtoull(temp, &endptr, 10);
-			if(errno == ERANGE) {
-				perror("\nstrtol");
-			}
-			if(endptr == temp) {
-				fprintf(stderr, "\nNo digits were found!");
-			}
-			if(DEBUG)
-				printf("\n  DEBUG> %d) %s => %llu", z, temp, thread_data_array[z].last_pos);
-			x = 0;
-			z++;
-		}
-	} while(y < WORDS_BUFFER_SIZE && z < SEARCH_THREADS && morph_last_pos[y++]);
-	if(DEBUG)
-		for(x = 0; x < SEARCH_THREADS; x++)
-			printf("\n  %d: %llu", x, thread_data_array[x].last_pos);
-	return 0;
-}*/
 
 
 /*
@@ -760,13 +592,9 @@ void func_on_socket_event(char *bufin)
 {
 	struct timeval tv1, tv2, tv3, tv4; // different counters
 	unsigned int t;
-	//char bufin[SOCKET_BUFFER_SIZE];
 	char bufout[SOCKET_BUFFER_SIZE];
 	char temp[SOCKET_BUFFER_SIZE];
 	unsigned int progress; // The position of last returned sentence in 'found_all'
-
-	
-	
 	
 	// Initial search time value
 	time_start(&tv1);
@@ -780,8 +608,6 @@ void func_on_socket_event(char *bufin)
 	// Parsing incoming JSON string and setting global variables
 	func_jsmn_json(bufin, rc);
 	func_fill_search_mask();
-	//func_parse_last_pos();
-	//func_validate_distances();
 
 	// Set the initial value of counters
 	found_limit = return_ngrams;
@@ -803,11 +629,13 @@ void func_on_socket_event(char *bufin)
 	printf("\n\nszExactMatch() time: %ld milliseconds.", time_stop(&tv2));
 
 	time_start(&tv3);
+
 	// broadcast to workers to work
 	pthread_mutex_lock(&mutex_united);
 	finished_united = SEARCH_THREADS;
 	pthread_cond_broadcast(&cond_united);
 	pthread_mutex_unlock(&mutex_united);
+
 	// wait for workers to finish
 	pthread_mutex_lock(&mutex2_united);
 	while(finished_united)
@@ -828,11 +656,13 @@ void func_on_socket_event(char *bufin)
 	}
 
 	time_start(&tv4);
+
 	// broadcast to workers to work
 	pthread_mutex_lock(&mutex);
 	finished = SEARCH_THREADS;
 	pthread_cond_broadcast(&cond);
 	pthread_mutex_unlock(&mutex);
+
 	// wait for workers to finish
 	pthread_mutex_lock(&mutex2);
 	while(finished)
@@ -886,120 +716,7 @@ void func_on_socket_event(char *bufin)
 		}
 	}
 	printf("\nQuery processing time: %ld milliseconds.\n", time_stop(&tv1));
-	
-	
-	
-	
-			
-	
-	
 }
-
-/*
- * Create UNIX domain socket
- * 	netstat -ap unix |grep fastmorph.socket
- * 	ncat -U /tmp/fastmorph.socket
- */
-//void * func_run_socket(/*int argc, char *argv[]*/)
-/*{
-	printf("\n  Begin of socket listening:\n");
-	unsigned int t;
-	int fd; // int fd, cl, rc;
-	struct sockaddr_un addr;
-	char bufin[SOCKET_BUFFER_SIZE];
-	char bufout[SOCKET_BUFFER_SIZE];
-	char temp[SOCKET_BUFFER_SIZE];
-	int rc_thread[SEARCH_THREADS];
-	pthread_t threads[SEARCH_THREADS]; // thread identifier
-	int rc_thread_united[SEARCH_THREADS];
-	pthread_t threads_united[SEARCH_THREADS]; // thread identifier
-	unsigned int progress; // The position of last returned sentence in 'found_all'
-
-	if((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-		perror("Socket error");
-		exit(-1);
-	}
-	memset(&addr, 0, sizeof(addr));
-	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path) - 1);
-	addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
-	unlink(socket_path);
-
-	if(bind(fd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-		perror("Bind error");
-		exit(-1);
-	}
-	// Giving permissions to all processes to access the socket file
-	chmod(socket_path, 0666);
-
-	if(listen(fd, 5) == -1) {
-		perror("Listen error");
-		exit(-1);
-	}
-	// Creating threads for the big cycle
-	printf("\n\nCreating threads...");
-	for(t = 0; t < SEARCH_THREADS; t++) {
-		printf("\n  Thread: creating thread %d", t);
-		thread_data_array[t].id = t;
-
-		// Create worker thread
-		rc_thread[t] = pthread_create(&threads[t], NULL, (void *) &func_run_cycle, (void *) &thread_data_array[t]);
-		if(rc_thread[t]) {
-			printf("\n  ERROR: return code from pthread_create() is %d", rc_thread[t]);
-			exit(-1);
-		}
-	}
-	// Creating threads for the united cycle
-	printf("\n\nCreating threads united...");
-	for(t = 0; t < SEARCH_THREADS; t++) {
-		printf("\n  Thread: creating thread united %d", t);
-		thread_data_array_united[t].id = t;
-
-		// Create worker thread
-		rc_thread_united[t] = pthread_create(&threads_united[t], NULL, (void *) &func_run_united, (void *) &thread_data_array_united[t]);
-		if(rc_thread_united[t]) {
-			printf("\n  ERROR: return code from pthread_create() united is %d", rc_thread_united[t]);
-			exit(-1);
-		}
-	}
-	while(1) {
-		if((cl = accept(fd, NULL, NULL)) == -1) {
-			perror("Accept error");
-			continue;
-		}
-		while((rc = read(cl, bufin, sizeof(bufin))) > 0) {
-			func_on_socket_event();
-		}
-		if(rc == -1) {
-			perror("Read error");
-			exit(-1);
-		} else if(rc == 0) {
-			printf("EOF\n");
-			close(cl);
-		}
-	}
-	// wait for our thread to finish before continuing
-	for(t = 0; t < SEARCH_THREADS; t++){
-		rc_thread[t] = pthread_join(threads[t], NULL);
-		if(rc_thread[t]) {
-			printf("\n  ERROR; return code from pthread_join() is %d", rc_thread[t]);
-			exit(-1);
-		}
-		printf("\n  Thread: completed join with thread #%d having a status of '%s'", t, strerror(rc_thread[t]));
-	}
-	// wait for our thread united to finish before continuing
-	for(t = 0; t < SEARCH_THREADS; t++){
-		rc_thread_united[t] = pthread_join(threads_united[t], NULL);
-		if(rc_thread_united[t]) {
-			printf("\n  ERROR; return code from pthread_join() united is %d", rc_thread_united[t]);
-			exit(-1);
-		}
-		printf("\n  Thread: completed join with thread united #%d having a status of '%s'", t, strerror(rc_thread_united[t]));
-	}
-	close(fd);
-	unlink(socket_path);
-	pthread_exit(NULL);
-}*/
 
 
 /*
@@ -1011,14 +728,6 @@ int main()
 	setlocale(LC_ALL, "ru_RU.UTF-8");
 
 	// Ngrams
-	/*
-	int array_ngrams1[NGRAMS_COLUMNS-1][NGRAMS1_ARRAY_SIZE];
-	int array_ngrams2[NGRAMS_COLUMNS][NGRAMS2_ARRAY_SIZE];
-	int array_ngrams3[NGRAMS_COLUMNS][NGRAMS3_ARRAY_SIZE];
-	int array_ngrams4[NGRAMS_COLUMNS][NGRAMS4_ARRAY_SIZE];
-	int array_ngrams5[NGRAMS_COLUMNS][NGRAMS5_ARRAY_SIZE];
-	int array_ngrams6[NGRAMS_COLUMNS][NGRAMS6_ARRAY_SIZE];
-	*/
 	for(int i = 0; i < NGRAMS_COLUMNS; i++) {
 		if(i < NGRAMS_COLUMNS-1)
 			array_ngrams1[i] = malloc(sizeof(*array_ngrams1) * NGRAMS1_ARRAY_SIZE);
@@ -1029,36 +738,12 @@ int main()
 		array_ngrams6[i] = malloc(sizeof(*array_ngrams6) * NGRAMS6_ARRAY_SIZE);
 	}
 	
-	
-	
-	
-	
-	
-	
-	
 	func_malloc();
-
 	func_read_mysql_common();
 	func_read_mysql();
 	//func_find_distances_for_threads();
 	func_find_distances_for_threads_united();
-
 	func_realloc();
-	
-	
-	
-	
-	
-	
-	
-
-	
-	
-	
-	
-	
-	
-	
 
 	sem_init(&count_sem, 0, 1);
 

@@ -1,3 +1,7 @@
+/*
+ * Cryptography related functions
+ */
+
 
 /*
  * Decrypt data
@@ -8,7 +12,6 @@ void decrypt(char *input, char *output, size_t output_buffer_size)
 	int len = strlen(input);
 	size_t xorlen;
 	if(!strlen(KEY)) {
-		//strncpy(output, input, );
 		output = strncpy(output, input, output_buffer_size - 1);
 		output[output_buffer_size - 1] = '\0';
 		return;

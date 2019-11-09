@@ -1,3 +1,7 @@
+/*
+ * MySQL related common functions
+ */
+
 
 /*
  * Connecting (or reconnecting) to MySQL (MariaDB)
@@ -36,7 +40,6 @@ int func_get_mysql_table_size(char *table)
 		exit(-1);
 	}
 	
-	//sprintf(mycommand, "SELECT COUNT(*) FROM fastmorph_words", );
 	sprintf(mycommand, "SELECT COUNT(*) FROM %s", table);
 	if(mysql_query(myconnect, mycommand)) {
 		printf("\n***ERROR: Cannot make query to MySQL!");
@@ -114,42 +117,6 @@ int func_read_mysql_common()
 		
 	printf("\n  Beginning data import...");
 
-	/*
-	// load tags_uniq table
-	sprintf(mycommand, "SELECT id, tag FROM fastmorph_tags_uniq LIMIT %d", TAGS_UNIQ_ARRAY_SIZE);
-	if(mysql_query(myconnect, mycommand)) {
-		printf("\n    ***ERROR: Cannot make query to MySQL!\n");
-		exit(-1);
-	} else {
-		if((myresult = mysql_store_result(myconnect)) == NULL) {
-			printf("\n    ***ERROR: MySQL - problem in 'myresult'!\n");
-			exit(-1);
-		} else {
-			i = 0;
-			while((row = mysql_fetch_row(myresult))) {
-				errno = 0;
-				x = (int) strtol(row[0], &endptr, 10);
-				decrypt(row[1], text);
-				if(errno == ERANGE)
-					perror("\nstrtol");
-				if(row[0] == endptr)
-					fprintf(stderr, "\nNo digits were found");
-				strncpy(array_tags_uniq[x], text, WORDS_BUFFER_SIZE - 1);
-				array_tags_uniq[x][WORDS_BUFFER_SIZE - 1] = '\0';
-				++i;
-			}
-			size_array_tags_uniq = mysql_num_rows(myresult);
-			printf("\n    Tags-uniq: %d rows imported.", size_array_tags_uniq);
-		}
-		if(mysql_errno(myconnect)) {
-			printf("\n    ***ERROR: MySQL - some error occurred!\n");
-			exit(-1);
-		}
-		mysql_free_result(myresult);
-	}
-	fflush(stdout);
-	*/
-
 	// load tags_uniq table
 	ptr = list_tags_uniq;
 	if(mysql_query(myconnect, "SELECT id, tag FROM fastmorph_tags_uniq")) {
@@ -179,11 +146,6 @@ int func_read_mysql_common()
 	}
 	fflush(stdout);
 
-	//for(int i = 0; i < TAGS_UNIQ_ARRAY_SIZE; i++)
-	//	printf("\nTAGS_UNIQ: %s", ptr_tags_uniq[i]);
-	
-	
-	
 	// load tags (combinations) table
 	ptr = list_tags;
 	if(mysql_query(myconnect, "SELECT id, combinations FROM fastmorph_tags")) {
@@ -213,11 +175,6 @@ int func_read_mysql_common()
 	}
 	fflush(stdout);
 
-	
-	//for(int i = 0; i < TAGS_ARRAY_SIZE; i++)
-	//	printf("\nTAGS: %s", ptr_tags[i]);
-	
-	
 	// load words_case table
 	printf("\n    Words_case: getting list...");
 	fflush(stdout);
@@ -251,9 +208,6 @@ int func_read_mysql_common()
 	}
 	fflush(stdout);
 
-	//for(int i = 0; i < WORDS_CASE_ARRAY_SIZE; i++)
-	//	printf("\nWORDS_CASE: %s", ptr_words_case[i]);
-	
 	// load words table
 	printf("\n    Words: getting list...");
 	fflush(stdout);
@@ -341,8 +295,6 @@ int func_read_mysql_common()
 				united_words[i] = ptr_words[x];
 				x = (int) strtol(row[2], &endptr, 10);
 				united_lemmas[i] = ptr_lemmas[x];
-				//if(!i)
-				//	printf("\nUNITED_LEMMAS: %d \t %s\n", i, united_lemmas[i]);
 				x = (int) strtol(row[3], &endptr, 10);
 				united_tags[i] = ptr_tags[x];
 				++i;
